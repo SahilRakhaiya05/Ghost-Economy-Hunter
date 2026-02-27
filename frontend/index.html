@@ -293,6 +293,93 @@ h1 { font-size: 38px; color: #38bdf8; margin-bottom: 6px; letter-spacing: -0.5px
   color: #38bdf8;
   border: 1px solid #334155;
 }
+
+/* Connect Data tab */
+.connect-section { margin-bottom: 40px; }
+.connect-card {
+  background: #1e293b;
+  border-radius: 14px;
+  padding: 28px;
+  border: 1px solid #334155;
+  margin-bottom: 20px;
+}
+.connect-card h3 { font-size: 16px; color: #f1f5f9; margin-bottom: 6px; }
+.connect-card p { font-size: 13px; color: #94a3b8; margin-bottom: 16px; line-height: 1.5; }
+.form-row { display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+.form-input {
+  flex: 1;
+  min-width: 200px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #334155;
+  background: #0f172a;
+  color: #e2e8f0;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.form-input:focus { border-color: #38bdf8; }
+.form-input::placeholder { color: #475569; }
+.form-btn {
+  padding: 10px 24px;
+  border-radius: 8px;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.form-btn.primary { background: #2563eb; color: white; }
+.form-btn.primary:hover { background: #1d4ed8; }
+.form-btn.secondary { background: #334155; color: #e2e8f0; }
+.form-btn.secondary:hover { background: #475569; }
+.form-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.file-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 8px;
+  background: #334155;
+  color: #e2e8f0;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.file-label:hover { background: #475569; }
+.file-label input[type="file"] { display: none; }
+.result-box {
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.6;
+  display: none;
+}
+.result-box.success { background: #052e16; border: 1px solid #166534; color: #4ade80; }
+.result-box.error { background: #450a0a; border: 1px solid #dc2626; color: #fca5a5; }
+.index-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; margin-top: 16px; }
+.index-item {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 14px 16px;
+  transition: border-color 0.2s;
+}
+.index-item:hover { border-color: #38bdf8; }
+.index-item .idx-name { font-size: 14px; font-weight: 600; color: #38bdf8; font-family: monospace; }
+.index-item .idx-info { font-size: 12px; color: #64748b; margin-top: 4px; }
+.field-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.field-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 600;
+}
+.field-tag.numeric { background: #1e3a5f; color: #93c5fd; }
+.field-tag.keyword { background: #1a2e1a; color: #86efac; }
+.field-tag.date { background: #2e1a2e; color: #d8b4fe; }
 </style>
 </head>
 <body>
@@ -309,6 +396,7 @@ h1 { font-size: 38px; color: #38bdf8; margin-bottom: 6px; letter-spacing: -0.5px
 
   <div class="tabs">
     <div class="tab active" onclick="switchTab('hunt')">Hunt</div>
+    <div class="tab" onclick="switchTab('data')">Connect Data</div>
     <div class="tab" onclick="switchTab('arch')">Architecture</div>
   </div>
 
@@ -377,6 +465,59 @@ h1 { font-size: 38px; color: #38bdf8; margin-bottom: 6px; letter-spacing: -0.5px
 
     <div class="error-box" id="errorBox"></div>
 
+  </div>
+
+  <!-- ═══ CONNECT DATA TAB ═══ -->
+  <div id="tab-data" class="tab-content">
+    <div class="connect-section">
+      <div class="section-title">Add Your Own Data</div>
+
+      <!-- Upload CSV -->
+      <div class="connect-card">
+        <h3>&#128228; Upload CSV File</h3>
+        <p>Upload any CSV file and Ghost Economy Hunter will automatically create an Elasticsearch index,
+           infer field types (numbers, dates, categories), and make it available for anomaly scanning.</p>
+        <div class="form-row">
+          <input type="text" class="form-input" id="uploadIndexName" placeholder="Index name (e.g. my-sales-data)">
+          <label class="file-label">
+            &#128193; Choose CSV
+            <input type="file" id="csvFile" accept=".csv" onchange="onFileSelect(this)">
+          </label>
+          <button class="form-btn primary" id="uploadBtn" onclick="uploadCSV()" disabled>Upload &amp; Index</button>
+        </div>
+        <div id="fileName" style="font-size:12px;color:#64748b;margin-top:4px;"></div>
+        <div class="result-box" id="uploadResult"></div>
+      </div>
+
+      <!-- Connect existing index -->
+      <div class="connect-card">
+        <h3>&#128268; Connect Existing Index</h3>
+        <p>Already have data in Elasticsearch? Enter the index name to inspect its structure and
+           see if it has anomaly detection potential.</p>
+        <div class="form-row">
+          <input type="text" class="form-input" id="connectIndexName" placeholder="Index name (e.g. server-logs-*)">
+          <button class="form-btn primary" onclick="connectIndex()">Inspect Index</button>
+        </div>
+        <div class="result-box" id="connectResult"></div>
+      </div>
+
+      <!-- Browse indexes -->
+      <div class="connect-card">
+        <h3>&#128202; Your Elasticsearch Indexes</h3>
+        <p>All indexes currently in your Elasticsearch cluster. Click refresh to update.</p>
+        <button class="form-btn secondary" onclick="loadIndexes()">Refresh Indexes</button>
+        <div class="index-list" id="indexList"></div>
+      </div>
+
+      <!-- Sample data -->
+      <div class="connect-card">
+        <h3>&#127919; Load Sample Data</h3>
+        <p>Don&rsquo;t have your own data? Generate the 3 demo datasets (factory IoT, hospital drugs, NYC buildings)
+           with one click. Requires the Python backend to be running.</p>
+        <button class="form-btn secondary" id="sampleBtn" onclick="loadSampleData()">Generate Sample Data</button>
+        <div class="result-box" id="sampleResult"></div>
+      </div>
+    </div>
   </div>
 
   <!-- ═══ ARCHITECTURE TAB ═══ -->
@@ -494,13 +635,149 @@ function switchTab(name) {
   var contents = document.querySelectorAll('.tab-content');
   for (var i = 0; i < tabs.length; i++) { tabs[i].classList.remove('active'); }
   for (var i = 0; i < contents.length; i++) { contents[i].classList.remove('active'); }
-  if (name === 'arch') {
-    tabs[1].classList.add('active');
-    document.getElementById('tab-arch').classList.add('active');
-  } else {
-    tabs[0].classList.add('active');
-    document.getElementById('tab-hunt').classList.add('active');
+  var tabMap = { hunt: 0, data: 1, arch: 2 };
+  var idx = tabMap[name] || 0;
+  tabs[idx].classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+  if (name === 'data') { loadIndexes(); }
+}
+
+function onFileSelect(input) {
+  var name = input.files.length ? input.files[0].name : '';
+  document.getElementById('fileName').textContent = name ? 'Selected: ' + name : '';
+  document.getElementById('uploadBtn').disabled = !name;
+}
+
+async function uploadCSV() {
+  var fileInput = document.getElementById('csvFile');
+  var idxInput = document.getElementById('uploadIndexName');
+  var resultBox = document.getElementById('uploadResult');
+  var btn = document.getElementById('uploadBtn');
+
+  if (!fileInput.files.length) return;
+  var idx = idxInput.value.trim().toLowerCase().replace(/\s+/g, '-');
+  if (!idx) { idx = fileInput.files[0].name.replace('.csv','').toLowerCase().replace(/\s+/g,'-'); }
+  idxInput.value = idx;
+
+  btn.disabled = true;
+  btn.textContent = 'Uploading\u2026';
+  resultBox.style.display = 'none';
+
+  var form = new FormData();
+  form.append('file', fileInput.files[0]);
+  form.append('index_name', idx);
+
+  try {
+    var resp = await fetch('/api/upload', { method: 'POST', body: form });
+    var data = await resp.json();
+    if (data.error) throw new Error(data.error);
+    resultBox.className = 'result-box success';
+    resultBox.innerHTML =
+      '<strong>\u2705 Indexed ' + data.documents + ' documents into "' + esc(data.index) + '"</strong><br>' +
+      'Fields: ' + data.fields.map(function(f) {
+        return '<span style="color:#38bdf8">' + esc(f) + '</span> (' + esc(data.field_types[f]) + ')';
+      }).join(', ') +
+      '<br><br>Now go to the <strong>Hunt</strong> tab and click Start Hunt \u2014 the Cartographer will automatically discover this new index!';
+    resultBox.style.display = 'block';
+    loadIndexes();
+  } catch (err) {
+    resultBox.className = 'result-box error';
+    resultBox.textContent = '\u274c Upload failed: ' + err.message;
+    resultBox.style.display = 'block';
   }
+  btn.disabled = false;
+  btn.textContent = 'Upload & Index';
+}
+
+async function connectIndex() {
+  var idxInput = document.getElementById('connectIndexName');
+  var resultBox = document.getElementById('connectResult');
+  var idx = idxInput.value.trim();
+  if (!idx) return;
+
+  resultBox.style.display = 'none';
+  try {
+    var resp = await fetch('/api/connect', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ index_name: idx })
+    });
+    var data = await resp.json();
+    if (data.error) throw new Error(data.error);
+
+    var fieldsHtml = '';
+    for (var f in data.fields) {
+      var t = data.fields[f];
+      var cls = (t === 'float' || t === 'double' || t === 'integer' || t === 'long') ? 'numeric' :
+                (t === 'keyword') ? 'keyword' : (t === 'date') ? 'date' : '';
+      fieldsHtml += '<span class="field-tag ' + cls + '">' + esc(f) + ' (' + t + ')</span> ';
+    }
+
+    resultBox.className = 'result-box success';
+    resultBox.innerHTML =
+      '<strong>\u2705 Connected: "' + esc(data.index) + '"</strong> &mdash; ' + data.doc_count.toLocaleString() + ' documents<br>' +
+      '<strong>Anomaly Potential:</strong> ' + data.anomaly_potential + '<br>' +
+      '<strong>Numeric fields:</strong> ' + (data.numeric_fields.length ? data.numeric_fields.join(', ') : 'none') + '<br>' +
+      '<strong>Keyword fields:</strong> ' + (data.keyword_fields.length ? data.keyword_fields.join(', ') : 'none') + '<br>' +
+      '<div class="field-tags" style="margin-top:8px">' + fieldsHtml + '</div>';
+    resultBox.style.display = 'block';
+  } catch (err) {
+    resultBox.className = 'result-box error';
+    resultBox.textContent = '\u274c ' + err.message;
+    resultBox.style.display = 'block';
+  }
+}
+
+async function loadIndexes() {
+  var container = document.getElementById('indexList');
+  if (window.location.protocol === 'file:') {
+    container.innerHTML = '<div style="color:#64748b;font-size:13px;padding:12px;">Run <code>python api.py</code> to see live indexes.</div>';
+    return;
+  }
+  try {
+    var resp = await fetch('/api/indexes');
+    var data = await resp.json();
+    if (!data.indexes || !data.indexes.length) {
+      container.innerHTML = '<div style="color:#64748b;font-size:13px;">No indexes found.</div>';
+      return;
+    }
+    container.innerHTML = '';
+    for (var i = 0; i < data.indexes.length; i++) {
+      var idx = data.indexes[i];
+      var div = document.createElement('div');
+      div.className = 'index-item';
+      div.innerHTML =
+        '<div class="idx-name">' + esc(idx.name) + '</div>' +
+        '<div class="idx-info">' + idx.doc_count.toLocaleString() + ' docs \u2022 ' + esc(idx.size) + '</div>';
+      container.appendChild(div);
+    }
+  } catch (err) {
+    container.innerHTML = '<div style="color:#64748b;font-size:13px;">Could not load indexes.</div>';
+  }
+}
+
+async function loadSampleData() {
+  var btn = document.getElementById('sampleBtn');
+  var resultBox = document.getElementById('sampleResult');
+  btn.disabled = true;
+  btn.textContent = 'Generating\u2026 (takes ~30s)';
+  resultBox.style.display = 'none';
+
+  try {
+    var resp = await fetch('/api/generate', { method: 'POST' });
+    var data = await resp.json();
+    if (data.error) throw new Error(data.error);
+    resultBox.className = 'result-box success';
+    resultBox.textContent = '\u2705 ' + data.message;
+    resultBox.style.display = 'block';
+    loadIndexes();
+  } catch (err) {
+    resultBox.className = 'result-box error';
+    resultBox.textContent = '\u274c ' + err.message;
+    resultBox.style.display = 'block';
+  }
+  btn.disabled = false;
+  btn.textContent = 'Generate Sample Data';
 }
 
 function setStep(n, state, text) {

@@ -224,6 +224,10 @@ FROM hospital-drugs
 |--------|------|-------------|
 | `GET` | `/` | Serves the frontend |
 | `POST` | `/api/run` | Runs the full 4-agent pipeline, returns JSON |
+| `POST` | `/api/upload` | Upload a CSV file to create a new ES index (auto-infers types) |
+| `POST` | `/api/connect` | Inspect an existing ES index (fields, types, anomaly potential) |
+| `GET` | `/api/indexes` | List all Elasticsearch indexes with doc counts |
+| `POST` | `/api/generate` | Generate sample demo data (factory, hospital, buildings) |
 | `GET` | `/api/health` | Health check |
 
 ---
