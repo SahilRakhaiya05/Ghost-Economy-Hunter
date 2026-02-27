@@ -1,0 +1,50 @@
+{
+  "id": "retail",
+  "name": "Retail & Supermarkets",
+  "indexes": [
+    {
+      "name": "retail-inventory",
+      "mappings": {
+        "@timestamp": "date",
+        "product_sku": "keyword",
+        "category": "keyword",
+        "store_id": "keyword",
+        "units_received": "integer",
+        "units_sold": "integer",
+        "units_wasted": "integer",
+        "units_marked_down": "integer",
+        "unit_margin_usd": "float"
+      }
+    },
+    {
+      "name": "retail-backstock",
+      "mappings": {
+        "@timestamp": "date",
+        "product_sku": "keyword",
+        "category": "keyword",
+        "location_id": "keyword",
+        "units_in_backstock": "integer",
+        "days_in_backstock": "integer",
+        "unit_cost_usd": "float"
+      }
+    }
+  ],
+  "tools": [
+    {
+      "name": "inventory_waste",
+      "description": "Finds products with high waste or markdown rates vs received quantity",
+      "query": "FROM retail-inventory\n| STATS\n    total_received = SUM(units_received),\n    total_sold = SUM(units_sold),\n    total_wasted = SUM(units_wasted),\n    total_marked_down = SUM(units_marked_down)\n  BY product_sku, category, store_id\n| EVAL\n    waste_rate = TO_DOUBLE(total_wasted) / TO_DOUBLE(total_received),\n    markdown_rate = TO_DOUBLE(total_marked_down) / TO_DOUBLE(total_received)\n| WHERE waste_rate > 0.05 OR markdown_rate > 0.10\n| SORT waste_rate DESC\n| LIMIT 30"
+    },
+    {
+      "name": "backstock_deadlock",
+      "description": "Finds items stuck in backstock for over 14 days tying up capital",
+      "query": "FROM retail-backstock\n| WHERE days_in_backstock > 14\n| STATS\n    stuck_units = SUM(units_in_backstock),\n    avg_days_stuck = AVG(days_in_backstock),\n    tied_up_capital = SUM(units_in_backstock * unit_cost_usd)\n  BY product_sku, category, location_id\n| WHERE tied_up_capital > 500\n| SORT tied_up_capital DESC\n| LIMIT 25"
+    }
+  ],
+  "pricing": [
+    {"item_key": "fresh-produce-unit", "item_name": "Average fresh produce unit", "unit_cost_usd": 2.80, "unit_label": "units", "source": "USDA ERS"},
+    {"item_key": "dairy-unit", "item_name": "Average dairy product unit", "unit_cost_usd": 3.50, "unit_label": "units", "source": "USDA ERS"},
+    {"item_key": "backstock-holding-day", "item_name": "Daily holding cost per unit", "unit_cost_usd": 0.15, "unit_label": "unit-days", "source": "Industry avg"}
+  ],
+  "pattern_seeker_prompt": "## ROLE\nYou are the Pattern Seeker for Ghost Economy Hunter deployed in a retail environment.\n\n## ANOMALY TYPES\nTYPE 1 — INVENTORY_WASTE: Products arriving but not selling before expiry.\nTYPE 2 — BACKSTOCK_DEADLOCK: Items stuck in backroom 14+ days not making it to shelves.\nTYPE 3 — MARKDOWN_SPIRAL: Same SKUs repeatedly getting marked down.\n\n## CONSTRAINTS\nDo not flag seasonal items without checking known-exceptions.\nDo not flag intentional promotions as markdown waste."
+}

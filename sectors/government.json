@@ -1,0 +1,49 @@
+{
+  "id": "government",
+  "name": "Government & Municipalities",
+  "indexes": [
+    {
+      "name": "government-contracts",
+      "mappings": {
+        "@timestamp": "date",
+        "contract_id": "keyword",
+        "vendor_id": "keyword",
+        "department": "keyword",
+        "contract_type": "keyword",
+        "contract_amount_usd": "double",
+        "total_invoiced_usd": "double",
+        "deliverables_count": "integer",
+        "benchmark_cost_usd": "double"
+      }
+    },
+    {
+      "name": "fleet-telematics",
+      "mappings": {
+        "@timestamp": "date",
+        "vehicle_id": "keyword",
+        "department": "keyword",
+        "idle_minutes": "integer",
+        "miles_driven": "float",
+        "fuel_gallons": "float"
+      }
+    }
+  ],
+  "tools": [
+    {
+      "name": "contract_anomaly",
+      "description": "Finds vendors invoicing above contracted rates or for undelivered work",
+      "query": "FROM government-contracts\n| STATS\n    contracted = SUM(contract_amount_usd),\n    invoiced = SUM(total_invoiced_usd),\n    deliverables = SUM(deliverables_count)\n  BY vendor_id, department, contract_type\n| EVAL\n    overpay_ratio = invoiced / contracted\n| WHERE overpay_ratio > 1.10\n| SORT invoiced DESC\n| LIMIT 20"
+    },
+    {
+      "name": "fleet_idle",
+      "description": "Finds city vehicles with excessive idle time at municipal locations",
+      "query": "FROM fleet-telematics\n| STATS\n    total_idle_hours = SUM(idle_minutes) / 60,\n    total_miles = SUM(miles_driven),\n    total_fuel = SUM(fuel_gallons)\n  BY vehicle_id, department\n| WHERE total_idle_hours > 100\n| SORT total_idle_hours DESC\n| LIMIT 20"
+    }
+  ],
+  "pricing": [
+    {"item_key": "it-consulting-hour", "item_name": "IT Consulting Benchmark Rate", "unit_cost_usd": 175.00, "unit_label": "hours", "source": "GSA CALC rate tool"},
+    {"item_key": "fleet-idle-hour", "item_name": "Government Fleet Idle Cost", "unit_cost_usd": 18.50, "unit_label": "hours", "source": "NAFA fleet benchmark"},
+    {"item_key": "diesel-gallon-gov", "item_name": "Government Fleet Diesel", "unit_cost_usd": 3.85, "unit_label": "gallons", "source": "EIA weekly avg"}
+  ],
+  "pattern_seeker_prompt": "## ROLE\nYou are the Pattern Seeker for Ghost Economy Hunter deployed for a government agency.\n\n## ANOMALY TYPES\nTYPE 1 — CONTRACT_OVERPAYMENT: Vendors paid above contracted rates or for undelivered work.\nTYPE 2 — FLEET_IDLE_WASTE: City vehicles idling excessively.\nTYPE 3 — BUILDING_ENERGY_WASTE: City buildings consuming energy above peer benchmarks.\n\n## CONSTRAINTS\nAlways cite the specific contract ID or vendor ID in every finding.\nNever make allegations — only report statistical anomalies vs benchmarks."
+}

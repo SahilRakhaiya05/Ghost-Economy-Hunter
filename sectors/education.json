@@ -1,0 +1,48 @@
+{
+  "id": "education",
+  "name": "Universities & Schools",
+  "indexes": [
+    {
+      "name": "classroom-bookings",
+      "mappings": {
+        "@timestamp": "date",
+        "room_id": "keyword",
+        "building_id": "keyword",
+        "department": "keyword",
+        "booking_duration_hours": "float",
+        "actual_occupancy_hours": "float",
+        "cost_per_room_hour_usd": "float"
+      }
+    },
+    {
+      "name": "software-license-usage",
+      "mappings": {
+        "@timestamp": "date",
+        "software_name": "keyword",
+        "department": "keyword",
+        "license_count": "integer",
+        "concurrent_users": "integer",
+        "daily_active_users": "integer",
+        "annual_license_cost_usd": "float"
+      }
+    }
+  ],
+  "tools": [
+    {
+      "name": "room_utilization",
+      "description": "Finds rooms consistently booked but empty — no-show booking waste",
+      "query": "FROM classroom-bookings\n| STATS\n    booked_hours = SUM(booking_duration_hours),\n    actual_hours = SUM(actual_occupancy_hours)\n  BY room_id, building_id, department\n| EVAL\n    wasted_hours = booked_hours - actual_hours,\n    no_show_rate = TO_DOUBLE(booked_hours - actual_hours) / TO_DOUBLE(booked_hours)\n| WHERE no_show_rate > 0.35\n| SORT wasted_hours DESC\n| LIMIT 20"
+    },
+    {
+      "name": "software_license_waste",
+      "description": "Finds software licenses purchased in bulk with very low concurrent usage",
+      "query": "FROM software-license-usage\n| STATS\n    licenses_owned = MAX(license_count),\n    peak_concurrent = MAX(concurrent_users),\n    avg_daily = AVG(daily_active_users)\n  BY software_name, department\n| EVAL\n    unused_licenses = licenses_owned - peak_concurrent\n| WHERE unused_licenses > 10\n| SORT unused_licenses DESC\n| LIMIT 20"
+    }
+  ],
+  "pricing": [
+    {"item_key": "classroom-hour", "item_name": "University Classroom Hour", "unit_cost_usd": 45.00, "unit_label": "hours", "source": "NACUBO facilities benchmark"},
+    {"item_key": "matlab-license", "item_name": "MATLAB Annual License", "unit_cost_usd": 860.00, "unit_label": "licenses", "source": "MathWorks academic pricing"},
+    {"item_key": "adobe-license", "item_name": "Adobe Creative Cloud Annual License", "unit_cost_usd": 420.00, "unit_label": "licenses", "source": "Adobe education pricing"}
+  ],
+  "pattern_seeker_prompt": "## ROLE\nYou are the Pattern Seeker for Ghost Economy Hunter deployed at a university or school.\n\n## ANOMALY TYPES\nTYPE 1 — ROOM_BOOKING_WASTE: Rooms booked by departments with consistently low actual attendance.\nTYPE 2 — SOFTWARE_LICENSE_WASTE: Software licenses purchased in bulk with low concurrent usage.\nTYPE 3 — LAB_EQUIPMENT_IDLE: Expensive lab equipment powered on with no active experiment.\n\n## CONSTRAINTS\nDo not flag rooms as waste during exam periods or holidays.\nSoftware usage naturally drops during summer — check semester schedule before flagging."
+}

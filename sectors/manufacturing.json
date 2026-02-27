@@ -1,0 +1,50 @@
+{
+  "id": "manufacturing",
+  "name": "Manufacturing & Factories",
+  "indexes": [
+    {
+      "name": "factory-machine-logs",
+      "mappings": {
+        "@timestamp": "date",
+        "machine_id": "keyword",
+        "machine_type": "keyword",
+        "line_id": "keyword",
+        "shift_scheduled": "boolean",
+        "runtime_minutes": "integer",
+        "production_units": "integer",
+        "energy_kwh": "float",
+        "hourly_rate_usd": "float"
+      }
+    },
+    {
+      "name": "factory-production-orders",
+      "mappings": {
+        "@timestamp": "date",
+        "product_id": "keyword",
+        "line_id": "keyword",
+        "planned_qty": "integer",
+        "actual_qty": "integer",
+        "setup_minutes": "integer",
+        "unit_revenue_usd": "float"
+      }
+    }
+  ],
+  "tools": [
+    {
+      "name": "machine_idle_anomaly",
+      "description": "Finds machines running outside scheduled production windows with no output",
+      "query": "FROM factory-machine-logs\n| WHERE shift_scheduled == false AND runtime_minutes > 60\n| STATS\n    total_unscheduled_hours = SUM(runtime_minutes) / 60,\n    incidents = COUNT(*),\n    avg_duration_mins = AVG(runtime_minutes)\n  BY machine_id, machine_type, line_id\n| WHERE total_unscheduled_hours > 50\n| SORT total_unscheduled_hours DESC\n| LIMIT 20"
+    },
+    {
+      "name": "production_shortfall",
+      "description": "Finds production lines consistently below 80% of planned capacity",
+      "query": "FROM factory-production-orders\n| STATS\n    planned_units = SUM(planned_qty),\n    actual_units = SUM(actual_qty),\n    setup_time_hours = SUM(setup_minutes) / 60\n  BY product_id, line_id\n| EVAL\n    shortfall = planned_units - actual_units,\n    efficiency = TO_DOUBLE(actual_units) / TO_DOUBLE(planned_units)\n| WHERE efficiency < 0.80\n| SORT shortfall DESC\n| LIMIT 15"
+    }
+  ],
+  "pricing": [
+    {"item_key": "press-machine-hour", "item_name": "Industrial Press Machine Hour", "unit_cost_usd": 112.50, "unit_label": "hours", "source": "BLS PPI metalworking"},
+    {"item_key": "cnc-machine-hour", "item_name": "CNC Machine Hour", "unit_cost_usd": 185.00, "unit_label": "hours", "source": "BLS PPI"},
+    {"item_key": "industrial-kwh", "item_name": "Industrial Electricity Rate", "unit_cost_usd": 0.08, "unit_label": "kwh", "source": "EIA industrial avg"}
+  ],
+  "pattern_seeker_prompt": "## ROLE\nYou are the Pattern Seeker for Ghost Economy Hunter deployed in a manufacturing facility.\n\n## ANOMALY TYPES\nTYPE 1 — UNSCHEDULED_MACHINE_RUNTIME: Machines running outside scheduled production windows.\nTYPE 2 — PRODUCTION_SHORTFALL: Lines consistently producing 20%+ below planned capacity.\nTYPE 3 — ENERGY_NO_OUTPUT: High energy consumption with zero production units.\n\n## CONSTRAINTS\nCheck maintenance records before flagging idle time — planned maintenance is not waste.\nDo not flag trial runs or quality check periods if logged in known-exceptions."
+}

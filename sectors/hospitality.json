@@ -1,0 +1,46 @@
+{
+  "id": "hospitality",
+  "name": "Hotels & Hospitality",
+  "indexes": [
+    {
+      "name": "hotel-food-orders",
+      "mappings": {
+        "@timestamp": "date",
+        "outlet_id": "keyword",
+        "meal_period": "keyword",
+        "covers_ordered": "integer",
+        "covers_served": "integer",
+        "food_cost_usd": "float"
+      }
+    },
+    {
+      "name": "room-occupancy",
+      "mappings": {
+        "@timestamp": "date",
+        "room_id": "keyword",
+        "floor_id": "keyword",
+        "is_occupied": "boolean",
+        "hvac_runtime_minutes": "integer",
+        "guest_present": "boolean"
+      }
+    }
+  ],
+  "tools": [
+    {
+      "name": "fb_waste",
+      "description": "Finds F&B outlets ordering based on optimistic occupancy, resulting in food waste",
+      "query": "FROM hotel-food-orders\n| STATS\n    total_ordered = SUM(covers_ordered),\n    total_served = SUM(covers_served),\n    total_cost = SUM(food_cost_usd)\n  BY outlet_id, meal_period\n| EVAL\n    cover_waste_pct = TO_DOUBLE(total_ordered - total_served) / TO_DOUBLE(total_ordered),\n    wasted_cost = total_cost * cover_waste_pct\n| WHERE cover_waste_pct > 0.20\n| SORT wasted_cost DESC\n| LIMIT 20"
+    },
+    {
+      "name": "vacant_hvac",
+      "description": "Finds rooms running climate control while confirmed vacant for hours",
+      "query": "FROM room-occupancy\n| WHERE is_occupied == false AND hvac_runtime_minutes > 60\n| STATS\n    total_hvac_hours = SUM(hvac_runtime_minutes) / 60,\n    vacant_events = COUNT(*)\n  BY floor_id\n| WHERE total_hvac_hours > 50\n| SORT total_hvac_hours DESC\n| LIMIT 20"
+    }
+  ],
+  "pricing": [
+    {"item_key": "food-cover", "item_name": "Average F&B Cover Cost", "unit_cost_usd": 32.00, "unit_label": "covers", "source": "NRA restaurant benchmark"},
+    {"item_key": "room-hvac-hour", "item_name": "Hotel Room HVAC per Hour", "unit_cost_usd": 3.50, "unit_label": "hours", "source": "ASHRAE hospitality benchmark"},
+    {"item_key": "minibar-restock", "item_name": "Minibar Restocking Labor Cost", "unit_cost_usd": 8.50, "unit_label": "events", "source": "Hospitality labor avg"}
+  ],
+  "pattern_seeker_prompt": "## ROLE\nYou are the Pattern Seeker for Ghost Economy Hunter deployed at a hotel or hospitality group.\n\n## ANOMALY TYPES\nTYPE 1 — FB_OVER_PROCUREMENT: Food ordered based on optimistic occupancy forecasts.\nTYPE 2 — VACANT_ROOM_HVAC: Climate control running in rooms confirmed vacant 4+ hours.\nTYPE 3 — MINIBAR_RESTOCKING_CHURN: Minibars restocked for very short stays.\n\n## CONSTRAINTS\nCheck event-calendar index before flagging F&B waste on conference days.\nRoom HVAC anomalies must be confirmed by key-card data, not just booking data."
+}

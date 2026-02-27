@@ -1,0 +1,44 @@
+{
+  "id": "real_estate",
+  "name": "Commercial Real Estate",
+  "indexes": [
+    {
+      "name": "building-energy-meters",
+      "mappings": {
+        "@timestamp": "date",
+        "building_id": "keyword",
+        "floor_id": "keyword",
+        "kwh_reading": "float",
+        "electricity_rate_usd": "float"
+      }
+    },
+    {
+      "name": "building-access-logs",
+      "mappings": {
+        "@timestamp": "date",
+        "building_id": "keyword",
+        "floor_id": "keyword",
+        "employee_id": "keyword",
+        "direction": "keyword"
+      }
+    }
+  ],
+  "tools": [
+    {
+      "name": "off_hours_energy",
+      "description": "Finds buildings consuming significant energy outside business hours",
+      "query": "FROM building-energy-meters\n| STATS\n    avg_kwh = AVG(kwh_reading),\n    total_kwh = SUM(kwh_reading),\n    readings = COUNT(*)\n  BY building_id, floor_id\n| EVAL\n    off_hours_cost = total_kwh * 0.22\n| WHERE total_kwh > 5000\n| SORT off_hours_cost DESC\n| LIMIT 30"
+    },
+    {
+      "name": "empty_floor_hvac",
+      "description": "Finds floors with near-zero occupancy but full climate control",
+      "query": "FROM building-access-logs\n| STATS\n    badge_swipes = COUNT(*),\n    unique_occupants = COUNT_DISTINCT(employee_id)\n  BY building_id, floor_id\n| WHERE unique_occupants < 5\n| SORT badge_swipes ASC\n| LIMIT 25"
+    }
+  ],
+  "pricing": [
+    {"item_key": "kwh-nyc", "item_name": "NYC Commercial Electricity", "unit_cost_usd": 0.22, "unit_label": "kwh", "source": "EIA NYC commercial avg"},
+    {"item_key": "kwh-national", "item_name": "US Commercial Electricity Avg", "unit_cost_usd": 0.14, "unit_label": "kwh", "source": "EIA national avg"},
+    {"item_key": "hvac-hour", "item_name": "HVAC Operating Cost per Hour", "unit_cost_usd": 45.00, "unit_label": "hours", "source": "ASHRAE benchmark"}
+  ],
+  "pattern_seeker_prompt": "## ROLE\nYou are the Pattern Seeker for Ghost Economy Hunter deployed for a commercial real estate portfolio.\n\n## ANOMALY TYPES\nTYPE 1 — OFF_HOURS_ENERGY_WASTE: Buildings consuming energy outside 8am-7pm Mon-Fri.\nTYPE 2 — EMPTY_FLOOR_CLIMATE_CONTROL: Floors heated/cooled with near-zero badge access.\nTYPE 3 — WEEKEND_BUILDING_OPERATION: Full systems running on weekends at <5% occupancy.\n\n## CONSTRAINTS\nCheck lease records before flagging a floor as empty.\nCheck known-exceptions for renovation periods."
+}

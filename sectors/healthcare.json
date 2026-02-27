@@ -1,0 +1,48 @@
+{
+  "id": "healthcare",
+  "name": "Hospitals & Healthcare",
+  "indexes": [
+    {
+      "name": "hospital-drug-orders",
+      "mappings": {
+        "@timestamp": "date",
+        "drug_name": "keyword",
+        "ward_id": "keyword",
+        "qty_ordered": "integer",
+        "qty_administered": "integer",
+        "qty_expired": "integer",
+        "unit_cost_usd": "float"
+      }
+    },
+    {
+      "name": "medical-equipment-logs",
+      "mappings": {
+        "@timestamp": "date",
+        "equipment_id": "keyword",
+        "equipment_type": "keyword",
+        "ward_id": "keyword",
+        "patient_in_room": "boolean",
+        "runtime_minutes": "integer",
+        "hourly_rate_usd": "float"
+      }
+    }
+  ],
+  "tools": [
+    {
+      "name": "hospital_drug_waste",
+      "description": "Finds drugs ordered significantly more than administered, detecting procurement waste",
+      "query": "FROM hospital-drug-orders\n| STATS\n    total_ordered = SUM(qty_ordered),\n    total_administered = SUM(qty_administered),\n    total_expired = SUM(qty_expired)\n  BY drug_name, ward_id\n| EVAL\n    waste_pct = TO_DOUBLE(total_ordered - total_administered) / TO_DOUBLE(total_ordered),\n    expired_cost = total_expired * unit_cost_usd\n| WHERE waste_pct > 0.20 OR expired_cost > 1000\n| SORT expired_cost DESC\n| LIMIT 25"
+    },
+    {
+      "name": "hospital_equipment_idle",
+      "description": "Finds medical equipment running with no patient present",
+      "query": "FROM medical-equipment-logs\n| WHERE patient_in_room == false\n| STATS\n    idle_hours = SUM(runtime_minutes) / 60,\n    idle_events = COUNT(*)\n  BY equipment_id, equipment_type, ward_id\n| WHERE idle_hours > 100\n| SORT idle_hours DESC\n| LIMIT 20"
+    }
+  ],
+  "pricing": [
+    {"item_key": "vancomycin", "item_name": "Vancomycin IV (1g vial)", "unit_cost_usd": 28.50, "unit_label": "vials", "source": "CMS NADAC"},
+    {"item_key": "insulin", "item_name": "Insulin Glargine (100u/mL)", "unit_cost_usd": 212.50, "unit_label": "units", "source": "CMS ASP"},
+    {"item_key": "mri-hour", "item_name": "MRI Machine Hour", "unit_cost_usd": 350.00, "unit_label": "hours", "source": "ACR cost study"}
+  ],
+  "pattern_seeker_prompt": "## ROLE\nYou are the Pattern Seeker for Ghost Economy Hunter deployed in a healthcare environment.\n\n## ANOMALY TYPES\nTYPE 1 — DRUG_OVER_PROCUREMENT: Drugs ordered far beyond what gets administered.\nTYPE 2 — EQUIPMENT_IDLE_TIME: Expensive equipment running when no patient is present.\n\n## CONSTRAINTS\nPatient privacy is paramount. Never surface individual patient identifiers.\nOnly aggregate by ward, drug type, or equipment category."
+}

@@ -1,0 +1,84 @@
+{
+  "sectors": [
+    {
+      "id": "healthcare",
+      "name": "Hospitals & Healthcare",
+      "icon": "\ud83c\udfe5",
+      "description": "Drug over-procurement, idle medical equipment, ward over-staffing",
+      "typical_waste_pct": "20-25% of supply budget",
+      "real_data_sources": ["openFDA drug shortage API", "CMS NADAC pricing", "EHR system exports"],
+      "detection_fields": ["drug_name", "qty_administered", "ward_id", "patient_count"],
+      "config_file": "healthcare.json"
+    },
+    {
+      "id": "retail",
+      "name": "Retail & Supermarkets",
+      "icon": "\ud83d\uded2",
+      "description": "Food waste, backstock deadlock, markdown spirals",
+      "typical_waste_pct": "3-5% of revenue",
+      "real_data_sources": ["Kaggle supermarket datasets", "Instacart open orders", "UK data.gov.uk"],
+      "detection_fields": ["product_sku", "pos_sales", "inventory_units", "store_id"],
+      "config_file": "retail.json"
+    },
+    {
+      "id": "manufacturing",
+      "name": "Manufacturing & Factories",
+      "icon": "\ud83c\udfed",
+      "description": "Unscheduled machine runtime, production shortfalls, energy spikes",
+      "typical_waste_pct": "5-15% of production capacity",
+      "real_data_sources": ["UCI Steel Industry dataset", "SCADA/MES exports", "BLS PPI rates"],
+      "detection_fields": ["machine_id", "runtime_minutes", "production_units", "shift_active"],
+      "config_file": "manufacturing.json"
+    },
+    {
+      "id": "real_estate",
+      "name": "Commercial Real Estate",
+      "icon": "\ud83c\udfe2",
+      "description": "Off-hours energy waste, empty floor HVAC, weekend operations",
+      "typical_waste_pct": "30% of energy spend",
+      "real_data_sources": ["NYC Open Data LL84", "EIA electricity rates", "BMS system exports"],
+      "detection_fields": ["building_id", "energy_kwh", "occupancy_pct", "floor_id"],
+      "config_file": "real_estate.json"
+    },
+    {
+      "id": "logistics",
+      "name": "Logistics & Trucking",
+      "icon": "\ud83d\ude9a",
+      "description": "Vehicle idle waste, empty miles, fuel consumption outliers",
+      "typical_waste_pct": "30-40% capacity waste",
+      "real_data_sources": ["FMCSA carrier data", "GPS telematics exports", "EIA diesel pricing"],
+      "detection_fields": ["vehicle_id", "empty_miles", "load_weight", "trip_manifest"],
+      "config_file": "logistics.json"
+    },
+    {
+      "id": "education",
+      "name": "Universities & Schools",
+      "icon": "\ud83c\udfeb",
+      "description": "Room booking waste, software license waste, lab equipment idle",
+      "typical_waste_pct": "$3-8M per year per university",
+      "real_data_sources": ["Institutional booking systems", "License telemetry", "Badge/swipe data"],
+      "detection_fields": ["room_id", "course_id", "enrollment_count", "license_count"],
+      "config_file": "education.json"
+    },
+    {
+      "id": "government",
+      "name": "Government & Municipalities",
+      "icon": "\ud83c\udfe6",
+      "description": "Contract overpayment, fleet idle waste, building energy waste",
+      "typical_waste_pct": "$20-100M per city per year",
+      "real_data_sources": ["USAspending.gov", "SAM.gov contracts", "City open data portals"],
+      "detection_fields": ["contract_id", "vendor_id", "invoice_amount", "deliverables"],
+      "config_file": "government.json"
+    },
+    {
+      "id": "hospitality",
+      "name": "Hotels & Hospitality",
+      "icon": "\ud83c\udfe8",
+      "description": "F&B over-procurement, vacant room HVAC, minibar restocking churn",
+      "typical_waste_pct": "$400K-2M per hotel per year",
+      "real_data_sources": ["PMS system exports", "BMS energy data", "F&B procurement records"],
+      "detection_fields": ["covers_served", "room_occupancy", "minibar_items", "outlet_id"],
+      "config_file": "hospitality.json"
+    }
+  ]
+}

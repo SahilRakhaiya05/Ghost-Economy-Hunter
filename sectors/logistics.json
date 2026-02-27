@@ -1,0 +1,49 @@
+{
+  "id": "logistics",
+  "name": "Logistics & Trucking",
+  "indexes": [
+    {
+      "name": "vehicle-telematics",
+      "mappings": {
+        "@timestamp": "date",
+        "vehicle_id": "keyword",
+        "driver_id": "keyword",
+        "depot_id": "keyword",
+        "engine_on": "boolean",
+        "speed_mph": "float",
+        "duration_minutes": "integer",
+        "idle_fuel_gallons": "float"
+      }
+    },
+    {
+      "name": "trip-manifests",
+      "mappings": {
+        "@timestamp": "date",
+        "vehicle_id": "keyword",
+        "lane_origin": "keyword",
+        "lane_destination": "keyword",
+        "load_weight_lbs": "float",
+        "distance_miles": "float",
+        "cost_per_mile_usd": "float"
+      }
+    }
+  ],
+  "tools": [
+    {
+      "name": "vehicle_idle",
+      "description": "Finds trucks idling for long periods at docks, rest stops, or depots",
+      "query": "FROM vehicle-telematics\n| WHERE engine_on == true AND speed_mph < 2\n| STATS\n    total_idle_minutes = SUM(duration_minutes),\n    idle_events = COUNT(*),\n    fuel_wasted_gallons = SUM(idle_fuel_gallons)\n  BY vehicle_id, driver_id, depot_id\n| WHERE total_idle_minutes > 300\n| SORT total_idle_minutes DESC\n| LIMIT 20"
+    },
+    {
+      "name": "empty_miles",
+      "description": "Finds routes with high empty mile rates indicating poor backhaul optimization",
+      "query": "FROM trip-manifests\n| STATS\n    total_trips = COUNT(*),\n    total_miles = SUM(distance_miles)\n  BY vehicle_id, lane_origin, lane_destination\n| WHERE total_miles > 1000\n| SORT total_miles DESC\n| LIMIT 20"
+    }
+  ],
+  "pricing": [
+    {"item_key": "diesel-gallon", "item_name": "Diesel Fuel per Gallon", "unit_cost_usd": 3.85, "unit_label": "gallons", "source": "EIA weekly diesel avg"},
+    {"item_key": "truck-mile", "item_name": "Cost per Truck Mile", "unit_cost_usd": 1.82, "unit_label": "miles", "source": "ATRI operational cost study"},
+    {"item_key": "driver-hour", "item_name": "Driver Hourly Rate", "unit_cost_usd": 28.50, "unit_label": "hours", "source": "BLS OES trucking avg"}
+  ],
+  "pattern_seeker_prompt": "## ROLE\nYou are the Pattern Seeker for Ghost Economy Hunter deployed for a logistics and trucking fleet.\n\n## ANOMALY TYPES\nTYPE 1 — EXCESSIVE_VEHICLE_IDLE: Trucks idling long periods at docks, rest stops, depots.\nTYPE 2 — HIGH_EMPTY_MILE_RATE: Specific routes consistently running empty in one direction.\nTYPE 3 — FUEL_CONSUMPTION_OUTLIER: Vehicles consuming more fuel per mile than fleet avg.\n\n## CONSTRAINTS\nCheck driver-hours logs before flagging idle time — mandatory rest breaks are not waste.\nEmpty miles at start/end of day (depot to first pickup) are expected."
+}

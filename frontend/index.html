@@ -380,6 +380,169 @@ h1 { font-size: 38px; color: #38bdf8; margin-bottom: 6px; letter-spacing: -0.5px
 .field-tag.numeric { background: #1e3a5f; color: #93c5fd; }
 .field-tag.keyword { background: #1a2e1a; color: #86efac; }
 .field-tag.date { background: #2e1a2e; color: #d8b4fe; }
+
+/* Chat tab */
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  height: 520px;
+  background: #1e293b;
+  border-radius: 14px;
+  border: 1px solid #334155;
+  overflow: hidden;
+}
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+.chat-msg {
+  margin-bottom: 16px;
+  animation: slideIn 0.3s ease;
+}
+.chat-msg.user .chat-bubble {
+  background: #2563eb;
+  color: white;
+  margin-left: 60px;
+  border-radius: 14px 14px 4px 14px;
+}
+.chat-msg.bot .chat-bubble {
+  background: #0f172a;
+  color: #e2e8f0;
+  margin-right: 60px;
+  border-radius: 14px 14px 14px 4px;
+  border: 1px solid #334155;
+}
+.chat-bubble {
+  padding: 12px 16px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.chat-bubble code {
+  background: rgba(56,189,248,0.15);
+  color: #38bdf8;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: "SF Mono", "Fira Code", monospace;
+}
+.chat-bubble .esql-block {
+  background: #0c1222;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin: 8px 0;
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 11px;
+  color: #38bdf8;
+  white-space: pre-wrap;
+  overflow-x: auto;
+}
+.chat-bubble table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8px 0;
+  font-size: 12px;
+}
+.chat-bubble table th {
+  background: #1e3a5f;
+  color: #93c5fd;
+  padding: 6px 10px;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 1px solid #334155;
+}
+.chat-bubble table td {
+  padding: 5px 10px;
+  border-bottom: 1px solid #1e293b;
+  color: #cbd5e1;
+}
+.chat-bubble table tr:hover td { background: rgba(56,189,248,0.05); }
+.chat-suggestion {
+  display: inline-block;
+  padding: 5px 12px;
+  margin: 3px 4px 3px 0;
+  border-radius: 16px;
+  font-size: 12px;
+  background: #1e3a5f;
+  color: #93c5fd;
+  cursor: pointer;
+  border: 1px solid #2563eb;
+  transition: all 0.2s;
+}
+.chat-suggestion:hover { background: #2563eb; color: white; }
+.chat-input-row {
+  display: flex;
+  gap: 8px;
+  padding: 16px;
+  border-top: 1px solid #334155;
+  background: #0f172a;
+}
+.chat-input {
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #e2e8f0;
+  font-size: 14px;
+  outline: none;
+}
+.chat-input:focus { border-color: #38bdf8; }
+.chat-input::placeholder { color: #475569; }
+.chat-send {
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: none;
+  background: #2563eb;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.chat-send:hover { background: #1d4ed8; }
+.chat-send:disabled { background: #334155; cursor: not-allowed; }
+
+/* Sector cards */
+.sector-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; margin: 16px 0; }
+.sector-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 18px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.sector-card:hover { border-color: #38bdf8; transform: translateY(-2px); }
+.sector-card.active { border-color: #22c55e; background: #052e16; }
+.sector-card .sc-icon { font-size: 28px; margin-bottom: 8px; }
+.sector-card .sc-name { font-size: 14px; font-weight: 700; color: #f1f5f9; margin-bottom: 4px; }
+.sector-card .sc-desc { font-size: 11px; color: #64748b; line-height: 1.4; }
+.sector-card .sc-waste { font-size: 11px; color: #f59e0b; margin-top: 6px; font-weight: 600; }
+.sector-detail {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-top: 16px;
+  display: none;
+}
+.sector-detail.show { display: block; animation: fadeIn 0.3s ease; }
+.sector-detail h3 { font-size: 18px; color: #f1f5f9; margin-bottom: 12px; }
+.sector-detail .sd-section { margin-bottom: 16px; }
+.sector-detail .sd-label { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+.sector-detail pre {
+  background: #0c1222;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 11px;
+  color: #38bdf8;
+  white-space: pre-wrap;
+  overflow-x: auto;
+  line-height: 1.5;
+}
 </style>
 </head>
 <body>
@@ -396,7 +559,9 @@ h1 { font-size: 38px; color: #38bdf8; margin-bottom: 6px; letter-spacing: -0.5px
 
   <div class="tabs">
     <div class="tab active" onclick="switchTab('hunt')">Hunt</div>
+    <div class="tab" onclick="switchTab('chat')">Chat</div>
     <div class="tab" onclick="switchTab('data')">Connect Data</div>
+    <div class="tab" onclick="switchTab('sectors')">Sectors</div>
     <div class="tab" onclick="switchTab('arch')">Architecture</div>
   </div>
 
@@ -467,6 +632,36 @@ h1 { font-size: 38px; color: #38bdf8; margin-bottom: 6px; letter-spacing: -0.5px
 
   </div>
 
+  <!-- ═══ CHAT TAB ═══ -->
+  <div id="tab-chat" class="tab-content">
+    <div class="section-title">Ask Your Data</div>
+    <p style="font-size:13px;color:#94a3b8;margin-bottom:16px;line-height:1.5;">
+      Ask questions in plain English and Ghost Economy Hunter will run live ES|QL queries against your Elasticsearch data.
+      Every answer comes with the exact query used &mdash; fully transparent, no hallucination.
+    </p>
+    <div class="chat-container">
+      <div class="chat-messages" id="chatMessages">
+        <div class="chat-msg bot">
+          <div class="chat-bubble">
+            Welcome! I can query your Elasticsearch data in real time. Try asking:
+            <div style="margin-top:8px;">
+              <span class="chat-suggestion" onclick="sendChat('Show me drug waste patterns')">Show me drug waste patterns</span>
+              <span class="chat-suggestion" onclick="sendChat('Which machines are running idle?')">Which machines are idle?</span>
+              <span class="chat-suggestion" onclick="sendChat('What buildings waste energy?')">Building energy waste</span>
+              <span class="chat-suggestion" onclick="sendChat('Total waste summary')">Total waste summary</span>
+              <span class="chat-suggestion" onclick="sendChat('What indexes do I have?')">List my indexes</span>
+              <span class="chat-suggestion" onclick="sendChat('Show pricing reference data')">Pricing data</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="chat-input-row">
+        <input type="text" class="chat-input" id="chatInput" placeholder="Ask about your data&hellip; (e.g. &quot;Show me drug waste&quot;)" onkeydown="if(event.key==='Enter')sendChat()">
+        <button class="chat-send" id="chatSendBtn" onclick="sendChat()">Send</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ═══ CONNECT DATA TAB ═══ -->
   <div id="tab-data" class="tab-content">
     <div class="connect-section">
@@ -518,6 +713,18 @@ h1 { font-size: 38px; color: #38bdf8; margin-bottom: 6px; letter-spacing: -0.5px
         <div class="result-box" id="sampleResult"></div>
       </div>
     </div>
+  </div>
+
+  <!-- ═══ SECTORS TAB ═══ -->
+  <div id="tab-sectors" class="tab-content">
+    <div class="section-title">Industry Sectors</div>
+    <p style="font-size:13px;color:#94a3b8;margin-bottom:16px;line-height:1.5;">
+      Ghost Economy Hunter works across <strong style="color:#f1f5f9;">any industry</strong>.
+      Same 4 agents, same workflow &mdash; just change the data. Click a sector to see its ready-to-deploy
+      ES|QL queries, agent prompts, and real-world data sources.
+    </p>
+    <div class="sector-grid" id="sectorGrid"></div>
+    <div class="sector-detail" id="sectorDetail"></div>
   </div>
 
   <!-- ═══ ARCHITECTURE TAB ═══ -->
@@ -635,11 +842,12 @@ function switchTab(name) {
   var contents = document.querySelectorAll('.tab-content');
   for (var i = 0; i < tabs.length; i++) { tabs[i].classList.remove('active'); }
   for (var i = 0; i < contents.length; i++) { contents[i].classList.remove('active'); }
-  var tabMap = { hunt: 0, data: 1, arch: 2 };
+  var tabMap = { hunt: 0, chat: 1, data: 2, sectors: 3, arch: 4 };
   var idx = tabMap[name] || 0;
   tabs[idx].classList.add('active');
   document.getElementById('tab-' + name).classList.add('active');
   if (name === 'data') { loadIndexes(); }
+  if (name === 'sectors') { loadSectors(); }
 }
 
 function onFileSelect(input) {
@@ -932,6 +1140,209 @@ async function startHunt() {
 
   btn.textContent = '\u2705 Hunt Complete \u2014 Run Again';
   btn.disabled = false;
+}
+
+/* ═══ CHAT ═══ */
+function addChatMsg(role, html) {
+  var container = document.getElementById('chatMessages');
+  var div = document.createElement('div');
+  div.className = 'chat-msg ' + role;
+  div.innerHTML = '<div class="chat-bubble">' + html + '</div>';
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function buildTableHtml(cols, rows) {
+  if (!rows || !rows.length) return '<em>No results</em>';
+  var h = '<table><thead><tr>';
+  for (var i = 0; i < cols.length; i++) h += '<th>' + esc(cols[i]) + '</th>';
+  h += '</tr></thead><tbody>';
+  var limit = Math.min(rows.length, 15);
+  for (var r = 0; r < limit; r++) {
+    h += '<tr>';
+    for (var c = 0; c < cols.length; c++) {
+      var val = rows[r][cols[c]];
+      if (typeof val === 'number') {
+        val = val % 1 === 0 ? val.toLocaleString() : val.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:4});
+      }
+      h += '<td>' + esc(String(val == null ? '' : val)) + '</td>';
+    }
+    h += '</tr>';
+  }
+  h += '</tbody></table>';
+  if (rows.length > 15) h += '<div style="font-size:11px;color:#64748b;margin-top:4px;">\u2026and ' + (rows.length - 15) + ' more rows</div>';
+  return h;
+}
+
+async function sendChat(preset) {
+  var input = document.getElementById('chatInput');
+  var msg = preset || input.value.trim();
+  if (!msg) return;
+  input.value = '';
+
+  addChatMsg('user', esc(msg));
+
+  var btn = document.getElementById('chatSendBtn');
+  btn.disabled = true;
+
+  if (window.location.protocol === 'file:') {
+    addChatMsg('bot', 'Chat requires the backend. Run <code>python api.py</code> then open <code>http://localhost:8000</code>');
+    btn.disabled = false;
+    return;
+  }
+
+  try {
+    var resp = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: msg })
+    });
+    var data = await resp.json();
+
+    if (data.error) {
+      addChatMsg('bot', '<span style="color:#fca5a5;">\u274c ' + esc(data.error) + '</span>');
+    } else if (data.type === 'help') {
+      var html = esc(data.explanation) + '<div style="margin-top:8px;">';
+      for (var i = 0; i < data.suggestions.length; i++) {
+        html += '<span class="chat-suggestion" onclick="sendChat(\'' + esc(data.suggestions[i]).replace(/'/g, "\\'") + '\')">' + esc(data.suggestions[i]) + '</span>';
+      }
+      html += '</div>';
+      addChatMsg('bot', html);
+    } else if (data.type === 'index_list') {
+      var html = esc(data.explanation) + '<br>';
+      for (var i = 0; i < data.results.length; i++) {
+        var ix = data.results[i];
+        html += '<code>' + esc(ix.name) + '</code> \u2014 ' + ix.docs.toLocaleString() + ' docs<br>';
+      }
+      addChatMsg('bot', html);
+    } else if (data.type === 'query_result') {
+      var html = '<strong>' + esc(data.explanation) + '</strong>';
+      html += '<div class="esql-block">' + esc(data.esql_query) + '</div>';
+      html += '<div style="font-size:12px;color:#64748b;margin-bottom:6px;">' + data.row_count + ' result' + (data.row_count !== 1 ? 's' : '') + '</div>';
+      html += buildTableHtml(data.columns, data.rows);
+      addChatMsg('bot', html);
+    }
+  } catch (err) {
+    addChatMsg('bot', '<span style="color:#fca5a5;">\u274c Connection error: ' + esc(err.message) + '</span>');
+  }
+  btn.disabled = false;
+}
+
+/* ═══ SECTORS ═══ */
+var sectorsCache = null;
+var sectorDetailCache = {};
+
+async function loadSectors() {
+  var grid = document.getElementById('sectorGrid');
+  if (sectorsCache) { renderSectors(sectorsCache); return; }
+  if (window.location.protocol === 'file:') {
+    grid.innerHTML = '<div style="color:#64748b;font-size:13px;">Run <code>python api.py</code> to load sectors.</div>';
+    return;
+  }
+  try {
+    var resp = await fetch('/api/sectors');
+    var data = await resp.json();
+    sectorsCache = data.sectors || [];
+    renderSectors(sectorsCache);
+  } catch (err) {
+    grid.innerHTML = '<div style="color:#64748b;font-size:13px;">Could not load sectors.</div>';
+  }
+}
+
+function renderSectors(sectors) {
+  var grid = document.getElementById('sectorGrid');
+  grid.innerHTML = '';
+  for (var i = 0; i < sectors.length; i++) {
+    var s = sectors[i];
+    var div = document.createElement('div');
+    div.className = 'sector-card';
+    div.setAttribute('data-id', s.id);
+    div.innerHTML =
+      '<div class="sc-icon">' + (s.icon || '') + '</div>' +
+      '<div class="sc-name">' + esc(s.name) + '</div>' +
+      '<div class="sc-desc">' + esc(s.description) + '</div>' +
+      '<div class="sc-waste">Typical waste: ' + esc(s.typical_waste_pct) + '</div>';
+    div.onclick = (function(sid) { return function() { showSectorDetail(sid); }; })(s.id);
+    grid.appendChild(div);
+  }
+}
+
+async function showSectorDetail(sectorId) {
+  var cards = document.querySelectorAll('.sector-card');
+  for (var i = 0; i < cards.length; i++) {
+    cards[i].classList.toggle('active', cards[i].getAttribute('data-id') === sectorId);
+  }
+
+  var detail = document.getElementById('sectorDetail');
+  if (sectorDetailCache[sectorId]) {
+    renderSectorDetail(sectorDetailCache[sectorId]);
+    return;
+  }
+
+  try {
+    var resp = await fetch('/api/sectors/' + sectorId);
+    var data = await resp.json();
+    sectorDetailCache[sectorId] = data;
+    renderSectorDetail(data);
+  } catch (err) {
+    detail.innerHTML = '<p style="color:#fca5a5;">Failed to load sector details.</p>';
+    detail.classList.add('show');
+  }
+}
+
+function renderSectorDetail(data) {
+  var detail = document.getElementById('sectorDetail');
+  var html = '<h3>' + esc(data.name) + '</h3>';
+
+  if (data.tools && data.tools.length) {
+    html += '<div class="sd-section"><div class="sd-label">ES|QL Tools (ready to paste into Agent Builder)</div>';
+    for (var i = 0; i < data.tools.length; i++) {
+      var t = data.tools[i];
+      html += '<div style="margin-bottom:12px;"><strong style="color:#38bdf8;">' + esc(t.name) + '</strong>';
+      html += '<span style="color:#64748b;font-size:12px;margin-left:8px;">' + esc(t.description) + '</span>';
+      html += '<pre>' + esc(t.query) + '</pre></div>';
+    }
+    html += '</div>';
+  }
+
+  if (data.pricing && data.pricing.length) {
+    html += '<div class="sd-section"><div class="sd-label">Pricing Reference</div>';
+    html += '<table style="width:100%;border-collapse:collapse;font-size:12px;">';
+    html += '<tr style="border-bottom:1px solid #334155;"><th style="padding:6px 10px;text-align:left;color:#64748b;">Item</th><th style="padding:6px 10px;text-align:right;color:#64748b;">Cost</th><th style="padding:6px 10px;text-align:left;color:#64748b;">Source</th></tr>';
+    for (var i = 0; i < data.pricing.length; i++) {
+      var p = data.pricing[i];
+      html += '<tr style="border-bottom:1px solid #1e293b;">' +
+        '<td style="padding:5px 10px;color:#e2e8f0;">' + esc(p.item_name) + '</td>' +
+        '<td style="padding:5px 10px;text-align:right;color:#f59e0b;font-weight:600;">$' + p.unit_cost_usd.toFixed(2) + '/' + esc(p.unit_label) + '</td>' +
+        '<td style="padding:5px 10px;color:#64748b;">' + esc(p.source) + '</td></tr>';
+    }
+    html += '</table></div>';
+  }
+
+  if (data.indexes && data.indexes.length) {
+    html += '<div class="sd-section"><div class="sd-label">Required Indexes</div>';
+    for (var i = 0; i < data.indexes.length; i++) {
+      var ix = data.indexes[i];
+      html += '<div style="margin-bottom:8px;"><code style="color:#38bdf8;">' + esc(ix.name) + '</code>';
+      html += '<div class="field-tags" style="margin-top:4px;">';
+      for (var f in ix.mappings) {
+        var t = ix.mappings[f];
+        var cls = (t === 'float' || t === 'double' || t === 'integer' || t === 'long') ? 'numeric' :
+                  (t === 'keyword') ? 'keyword' : (t === 'date') ? 'date' : '';
+        html += '<span class="field-tag ' + cls + '">' + esc(f) + ' (' + t + ')</span>';
+      }
+      html += '</div></div>';
+    }
+    html += '</div>';
+  }
+
+  if (data.pattern_seeker_prompt) {
+    html += '<div class="sd-section"><div class="sd-label">Pattern Seeker Agent Prompt</div>';
+    html += '<pre>' + esc(data.pattern_seeker_prompt) + '</pre></div>';
+  }
+
+  detail.innerHTML = html;
+  detail.classList.add('show');
 }
 </script>
 </body>

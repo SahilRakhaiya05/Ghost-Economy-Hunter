@@ -38,7 +38,7 @@ _SLACK_URL  = os.getenv("SLACK_WEBHOOK_URL", "")
 
 def _es() -> Elasticsearch:
     """Return a configured Elasticsearch client."""
-    return Elasticsearch(_ES_URL, api_key=_ES_KEY)
+    return Elasticsearch(_ES_URL, api_key=_ES_KEY, request_timeout=30)
 
 
 def _esql(query: str) -> List[Dict[str, Any]]:
@@ -58,77 +58,139 @@ def _esql(query: str) -> List[Dict[str, Any]]:
 
 # ── Agent 1: Cartographer ─────────────────────────────────────────────────────
 
-def run_cartographer() -> Dict[str, Any]:
-    """Map all Elasticsearch indexes and identify anomaly potential.
+_SECTOR_DETECTION_RULES: Dict[str, List[str]] = {
+    "healthcare":     ["drug_name", "qty_administered", "ward_id", "qty_ordered", "qty_used"],
+    "retail":         ["product_sku", "pos_sales", "units_sold", "units_wasted", "store_id"],
+    "manufacturing":  ["machine_id", "runtime_minutes", "production_units", "shift_active"],
+    "real_estate":    ["building_id", "energy_kwh", "occupancy_pct", "floor_id"],
+    "logistics":      ["vehicle_id", "empty_miles", "load_weight", "trip_manifest"],
+    "education":      ["room_id", "course_id", "enrollment_count", "license_count"],
+    "government":     ["contract_id", "vendor_id", "invoice_amount", "deliverables"],
+    "hospitality":    ["covers_served", "room_occupancy", "minibar_items", "outlet_id"],
+}
+
+
+def _detect_sector(fields: List[str]) -> str:
+    """Auto-detect which sector the data belongs to based on field names.
+
+    Args:
+        fields: List of all field names found across indexes.
 
     Returns:
-        dict: indexes list, correlation_pairs, confidence_score, summary.
+        Detected sector ID or 'multi-sector'.
+    """
+    field_set = set(f.lower() for f in fields)
+    scores: Dict[str, int] = {}
+    for sector, indicators in _SECTOR_DETECTION_RULES.items():
+        scores[sector] = sum(1 for i in indicators if i in field_set)
+    matches = [(s, c) for s, c in scores.items() if c >= 2]
+    if not matches:
+        return "generic"
+    matches.sort(key=lambda x: x[1], reverse=True)
+    if len(matches) >= 2 and matches[0][1] == matches[1][1]:
+        return "multi-sector"
+    return matches[0][0]
+
+
+def run_cartographer() -> Dict[str, Any]:
+    """Map all Elasticsearch indexes dynamically and identify anomaly potential.
+
+    Auto-discovers every non-system index, inspects field mappings,
+    and detects the business sector using field-name heuristics.
+
+    Returns:
+        dict: indexes list, sector_detected, correlation_pairs, confidence_score, summary.
     """
     log.info("Agent 1 — Cartographer: mapping indexes...")
     es = _es()
 
-    target_indexes = [
-        "factory-iot-data",
-        "hospital-drugs",
-        "nyc-buildings",
-        "pricing-reference",
-        "known-exceptions",
-        "ghost-economy-audit",
+    domain_hints = {
+        "factory": "manufacturing operations",
+        "hospital": "healthcare procurement",
+        "drug": "healthcare procurement",
+        "building": "real estate energy",
+        "nyc": "real estate energy",
+        "pricing": "pricing reference",
+        "exception": "exception registry",
+        "audit": "audit trail",
+        "retail": "retail operations",
+        "vehicle": "logistics fleet",
+        "hotel": "hospitality operations",
+        "room": "space utilization",
+        "software": "license management",
+        "contract": "government procurement",
+    }
+
+    known_targets = [
+        "factory-iot-data", "hospital-drugs", "nyc-buildings",
+        "pricing-reference", "known-exceptions", "ghost-economy-audit",
     ]
+    try:
+        cat_result = es.cat.indices(format="json", h="index,docs.count")
+        discovered = [
+            (e.get("index", ""), int(e.get("docs.count", 0) or 0))
+            for e in cat_result if not e.get("index", "").startswith(".")
+        ]
+    except (ApiError, Exception):
+        log.warning("cat.indices failed — falling back to known target indexes")
+        discovered = []
+        for idx in known_targets:
+            try:
+                cnt = _esql(f"FROM {idx} | STATS c = COUNT(*) | LIMIT 1")
+                discovered.append((idx, cnt[0]["c"] if cnt else 0))
+            except (ApiError, Exception):
+                discovered.append((idx, 0))
 
+    all_fields: List[str] = []
     indexes = []
-    for idx in target_indexes:
-        try:
-            count_result = _esql(f"FROM {idx} | STATS doc_count = COUNT(*) | LIMIT 1")
-            doc_count = count_result[0]["doc_count"] if count_result else 0
-        except ApiError:
-            doc_count = 0
 
-        anomaly_map = {
-            "factory-iot-data": "HIGH",
-            "hospital-drugs": "HIGH",
-            "nyc-buildings": "HIGH",
-            "pricing-reference": "LOW",
-            "known-exceptions": "LOW",
-            "ghost-economy-audit": "LOW",
-        }
-        domain_map = {
-            "factory-iot-data": "manufacturing operations",
-            "hospital-drugs": "healthcare procurement",
-            "nyc-buildings": "real estate energy",
-            "pricing-reference": "pricing reference",
-            "known-exceptions": "exception registry",
-            "ghost-economy-audit": "audit trail",
-        }
-        numeric_map = {
-            "factory-iot-data": ["runtime_minutes", "production_units", "cost_per_hour"],
-            "hospital-drugs": ["qty_ordered", "qty_used", "unit_cost_usd"],
-            "nyc-buildings": ["occupancy_pct", "energy_kwh", "sqft"],
-            "pricing-reference": ["unit_cost_usd"],
-            "known-exceptions": [],
-            "ghost-economy-audit": ["dollar_value", "confidence", "annualized_value"],
-        }
-        keyword_map = {
-            "factory-iot-data": ["machine_id"],
-            "hospital-drugs": ["drug_name", "wing_id"],
-            "nyc-buildings": ["building_id", "borough"],
-            "pricing-reference": ["item_key", "unit_label"],
-            "known-exceptions": ["entity_id"],
-            "ghost-economy-audit": ["finding_id", "category", "action_taken"],
-        }
+    for idx_name, doc_count in discovered:
+        if idx_name.startswith("."):
+            continue
+
+        try:
+            mapping = es.indices.get_mapping(index=idx_name)
+            props = {}
+            for _k, v in mapping.items():
+                props = v.get("mappings", {}).get("properties", {})
+                break
+        except ApiError:
+            props = {}
+
+        numeric_fields = [f for f, d in props.items() if d.get("type") in ("float", "double", "integer", "long")]
+        keyword_fields = [f for f, d in props.items() if d.get("type") == "keyword"]
+        all_fields.extend(list(props.keys()))
+
+        domain = "general"
+        for hint_key, hint_domain in domain_hints.items():
+            if hint_key in idx_name:
+                domain = hint_domain
+                break
+
+        if len(numeric_fields) >= 2:
+            potential = "HIGH"
+        elif len(numeric_fields) >= 1:
+            potential = "MEDIUM"
+        else:
+            potential = "LOW"
+
         indexes.append({
-            "name": idx,
-            "domain": domain_map[idx],
+            "name": idx_name,
+            "domain": domain,
             "doc_count": doc_count,
-            "timestamp_field": "@timestamp" if idx not in ("pricing-reference",) else None,
-            "numeric_fields": numeric_map[idx],
-            "keyword_fields": keyword_map[idx],
-            "anomaly_potential": anomaly_map[idx],
+            "timestamp_field": "@timestamp" if "@timestamp" in props else None,
+            "numeric_fields": numeric_fields,
+            "keyword_fields": keyword_fields,
+            "anomaly_potential": potential,
         })
-        log.info("  %s — %d docs — %s anomaly potential", idx, doc_count, anomaly_map[idx])
+        log.info("  %s — %d docs — %s anomaly potential", idx_name, doc_count, potential)
+
+    sector = _detect_sector(all_fields)
+    high_count = sum(1 for i in indexes if i["anomaly_potential"] == "HIGH")
 
     result = {
         "indexes": indexes,
+        "sector_detected": sector,
         "correlation_pairs": [
             {"index_a": "factory-iot-data", "index_b": "pricing-reference",
              "reason": "machine idle hours costed via press-machine-hour unit rate"},
@@ -138,7 +200,10 @@ def run_cartographer() -> Dict[str, Any]:
              "reason": "excess energy kWh costed via kwh-nyc electricity rate"},
         ],
         "confidence_score": 0.97,
-        "summary": f"Found {len(indexes)} indexes across 3 business domains with HIGH anomaly potential",
+        "summary": (
+            f"Found {len(indexes)} indexes — sector: {sector} — "
+            f"{high_count} with HIGH anomaly potential"
+        ),
     }
     log.info("Cartographer complete: %s", result["summary"])
     return result

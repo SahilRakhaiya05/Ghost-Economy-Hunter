@@ -320,6 +320,170 @@ async def connect_index(body: Dict[str, Any]) -> JSONResponse:
         return JSONResponse(status_code=500, content={"error": str(exc)})
 
 
+@app.get("/api/sectors")
+async def list_sectors() -> JSONResponse:
+    """List all available sector templates.
+
+    Returns:
+        JSON with sector registry data.
+    """
+    registry_path = Path(__file__).parent / "sectors" / "registry.json"
+    try:
+        with open(registry_path, encoding="utf-8") as f:
+            import json as _json
+            data = _json.load(f)
+        return JSONResponse(content=data)
+    except FileNotFoundError:
+        return JSONResponse(status_code=404, content={"error": "Sector registry not found"})
+
+
+@app.get("/api/sectors/{sector_id}")
+async def get_sector(sector_id: str) -> JSONResponse:
+    """Get full configuration for a specific sector.
+
+    Args:
+        sector_id: Sector identifier (e.g. healthcare, retail).
+
+    Returns:
+        JSON with sector config including indexes, tools, pricing, prompts.
+    """
+    config_path = Path(__file__).parent / "sectors" / f"{sector_id}.json"
+    try:
+        with open(config_path, encoding="utf-8") as f:
+            import json as _json
+            data = _json.load(f)
+        return JSONResponse(content=data)
+    except FileNotFoundError:
+        return JSONResponse(status_code=404, content={"error": f"Sector '{sector_id}' not found"})
+
+
+@app.post("/api/chat")
+async def chat_query(body: Dict[str, Any]) -> JSONResponse:
+    """Run an interactive ES|QL query based on user's natural-language question.
+
+    Matches user questions to pre-built ES|QL patterns and returns live results.
+
+    Args:
+        body: JSON with "message" field.
+
+    Returns:
+        JSON with query results and explanation.
+    """
+    msg = body.get("message", "").strip().lower()
+    if not msg:
+        return JSONResponse(status_code=400, content={"error": "message is required"})
+
+    try:
+        es = _es()
+        query = None
+        explanation = ""
+
+        if any(w in msg for w in ["drug", "hospital", "pharma", "medicine", "insulin", "procurement"]):
+            query = (
+                "FROM hospital-drugs "
+                "| STATS total_ordered = SUM(qty_ordered), total_used = SUM(qty_used) "
+                "  BY drug_name, wing_id "
+                "| EVAL delta = total_ordered - total_used, "
+                "  waste_ratio = TO_DOUBLE(total_ordered - total_used) / TO_DOUBLE(total_ordered) "
+                "| SORT waste_ratio DESC "
+                "| LIMIT 10"
+            )
+            explanation = "Querying hospital-drugs index for procurement vs usage patterns"
+
+        elif any(w in msg for w in ["machine", "factory", "idle", "press", "runtime", "shift"]):
+            query = (
+                "FROM factory-iot-data "
+                "| WHERE shift_active == false "
+                "| STATS total_idle = SUM(runtime_minutes), avg_idle = AVG(runtime_minutes) "
+                "  BY machine_id "
+                "| EVAL idle_hours = total_idle / 60, cost = idle_hours * 112.50 "
+                "| SORT cost DESC "
+                "| LIMIT 10"
+            )
+            explanation = "Querying factory-iot-data for off-shift machine runtime"
+
+        elif any(w in msg for w in ["building", "energy", "nyc", "occupancy", "kwh", "real estate"]):
+            query = (
+                "FROM nyc-buildings "
+                "| STATS avg_occ = AVG(occupancy_pct), total_kwh = SUM(energy_kwh) "
+                "  BY building_id, borough "
+                "| EVAL energy_cost = total_kwh * 0.22, waste_score = (1 - avg_occ) * total_kwh "
+                "| SORT waste_score DESC "
+                "| LIMIT 10"
+            )
+            explanation = "Querying nyc-buildings for energy vs occupancy divergence"
+
+        elif any(w in msg for w in ["pricing", "cost", "rate", "price", "reference"]):
+            query = "FROM pricing-reference | KEEP item_key, item_name, unit_cost_usd, unit_label, source | LIMIT 20"
+            explanation = "Listing all pricing reference data"
+
+        elif any(w in msg for w in ["audit", "finding", "action", "alert", "history"]):
+            query = (
+                "FROM ghost-economy-audit "
+                "| SORT @timestamp DESC "
+                "| KEEP @timestamp, finding_id, entity, category, dollar_value, action_taken, priority "
+                "| LIMIT 20"
+            )
+            explanation = "Showing recent audit trail from ghost-economy-audit"
+
+        elif any(w in msg for w in ["total", "summary", "how much", "waste", "overview"]):
+            query = (
+                "FROM ghost-economy-audit "
+                "| STATS "
+                "    total_waste = SUM(dollar_value), "
+                "    findings = COUNT(*), "
+                "    avg_confidence = AVG(confidence) "
+                "  BY category "
+                "| SORT total_waste DESC "
+                "| LIMIT 10"
+            )
+            explanation = "Summarizing total waste by category from audit records"
+
+        elif any(w in msg for w in ["index", "indexes", "what data", "list", "show me"]):
+            cat = es.cat.indices(format="json", h="index,docs.count,store.size")
+            indexes = [
+                {"name": i.get("index", ""), "docs": int(i.get("docs.count", 0) or 0)}
+                for i in cat if not i.get("index", "").startswith(".")
+            ]
+            return JSONResponse(content={
+                "type": "index_list",
+                "explanation": "Here are all your Elasticsearch indexes:",
+                "results": sorted(indexes, key=lambda x: x["name"]),
+            })
+
+        else:
+            return JSONResponse(content={
+                "type": "help",
+                "explanation": "I can answer questions about your data. Try asking about:",
+                "suggestions": [
+                    "Show me drug waste patterns",
+                    "Which machines are running idle?",
+                    "What buildings waste energy?",
+                    "Show pricing reference data",
+                    "Total waste summary",
+                    "Recent audit findings",
+                    "What indexes do I have?",
+                ],
+            })
+
+        result = es.esql.query(query=query)
+        cols = [c["name"] for c in result["columns"]]
+        rows = [dict(zip(cols, row)) for row in result["values"]]
+
+        return JSONResponse(content={
+            "type": "query_result",
+            "explanation": explanation,
+            "esql_query": query,
+            "columns": cols,
+            "rows": rows,
+            "row_count": len(rows),
+        })
+
+    except ApiError as exc:
+        log.error("Chat query failed: %s", exc)
+        return JSONResponse(status_code=500, content={"error": str(exc)})
+
+
 @app.post("/api/generate")
 async def generate_sample_data() -> JSONResponse:
     """Generate and index the 3 sample datasets + pricing + exceptions.

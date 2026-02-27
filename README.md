@@ -150,7 +150,7 @@ pytest tests/ -v
 
 ```
 ghost-economy-hunter/
-├── api.py                          # FastAPI server (frontend + /api/run)
+├── api.py                          # FastAPI server (all endpoints)
 ├── constants.py                    # Index names, agent IDs
 ├── requirements.txt
 ├── .env.example
@@ -161,6 +161,17 @@ ghost-economy-hunter/
 │   ├── generate_hospital.py        # Hospital drug procurement data
 │   ├── fetch_nyc_buildings.py      # NYC building energy data (real + synthetic)
 │   └── pricing_reference.json      # Unit cost reference (real market rates)
+│
+├── sectors/                        # 8 industry templates
+│   ├── registry.json               # Sector registry with all 8 sectors
+│   ├── healthcare.json             # Hospitals & Healthcare
+│   ├── retail.json                 # Retail & Supermarkets
+│   ├── manufacturing.json          # Manufacturing & Factories
+│   ├── real_estate.json            # Commercial Real Estate
+│   ├── logistics.json              # Logistics & Trucking
+│   ├── education.json              # Universities & Schools
+│   ├── government.json             # Government & Municipalities
+│   └── hospitality.json            # Hotels & Hospitality
 │
 ├── elastic/
 │   ├── setup/
@@ -218,15 +229,35 @@ FROM hospital-drugs
 
 ---
 
+## Multi-Sector Support
+
+Ghost Economy Hunter is industry-agnostic. The same 4 agents, same workflow, different data. Includes ready-to-deploy templates for **8 sectors**:
+
+| Sector | Typical Waste | Anomaly Types |
+|--------|---------------|---------------|
+| Healthcare | 20-25% of supply budget | Drug over-procurement, idle equipment |
+| Retail | 3-5% of revenue | Food waste, backstock deadlock, markdown spirals |
+| Manufacturing | 5-15% of capacity | Unscheduled runtime, production shortfalls |
+| Real Estate | 30% of energy spend | Off-hours energy, empty floor HVAC |
+| Logistics | 30-40% capacity waste | Vehicle idle, empty miles, fuel outliers |
+| Education | $3-8M/yr per university | Room booking waste, unused software licenses |
+| Government | $20-100M per city/year | Contract overpayment, fleet idle waste |
+| Hospitality | $400K-2M per hotel/year | F&B over-procurement, vacant room HVAC |
+
+Each sector template includes ES|QL queries, agent prompts, and real-world pricing references.
+
 ## API Endpoints
 
 | Method | Path | Description |
 |--------|------|-------------|
 | `GET` | `/` | Serves the frontend |
 | `POST` | `/api/run` | Runs the full 4-agent pipeline, returns JSON |
+| `POST` | `/api/chat` | Interactive ES|QL chat — ask questions in plain English |
 | `POST` | `/api/upload` | Upload a CSV file to create a new ES index (auto-infers types) |
 | `POST` | `/api/connect` | Inspect an existing ES index (fields, types, anomaly potential) |
 | `GET` | `/api/indexes` | List all Elasticsearch indexes with doc counts |
+| `GET` | `/api/sectors` | List all 8 sector templates |
+| `GET` | `/api/sectors/{id}` | Get full sector config (queries, prompts, pricing) |
 | `POST` | `/api/generate` | Generate sample demo data (factory, hospital, buildings) |
 | `GET` | `/api/health` | Health check |
 
