@@ -1028,8 +1028,7 @@ function sendChat(msg){
     var metaHtml='<div class="chat-meta"><span class="chat-meta-time">'+elapsed+'s</span>';
     if(d.source==='agent_builder'){
       conversationId=d.conversation_id||'';
-      var agentText=typeof d.response==='object'?(d.response.message||d.response.text||JSON.stringify(d.response)):String(d.response||'');
-      botDiv.innerHTML='<span class="source-tag">Agent Builder: '+esc(d.agent_id||'')+'</span>'+formatAgentResponse(agentText);
+      botDiv.innerHTML='<span class="source-tag">Agent Builder: '+esc(d.agent_id||'')+'</span>'+formatAgentResponse(d.response);
       metaHtml+='<span class="chat-meta-tag">Powered by Agent Builder</span>';
     } else if(d.type==='query_result'){
       var html='<span class="source-tag">ES|QL: '+esc(d.provenance?.source_index||'')+'</span>';
@@ -1071,11 +1070,22 @@ function sendChat(msg){
     msgs.appendChild(errDiv);
   });
 }
+function extractText(v){
+  if(!v)return '';
+  if(typeof v==='string')return v;
+  if(typeof v==='object'){
+    if(v.message&&typeof v.message==='string')return v.message;
+    if(v.text&&typeof v.text==='string')return v.text;
+    if(v.content&&typeof v.content==='string')return v.content;
+    if(v.response)return extractText(v.response);
+    return JSON.stringify(v,null,2);
+  }
+  return String(v);
+}
 function formatAgentResponse(text){
+  text=extractText(text);
   if(!text)return '<em style="color:var(--text-dim)">No response</em>';
-  if(typeof text==='object'){text=text.message||text.text||JSON.stringify(text,null,2)}
-  text=String(text);
-  try{var j=JSON.parse(text);if(j.message)text=j.message;else if(j.response)text=j.response;else return '<pre>'+esc(JSON.stringify(j,null,2))+'</pre>'}catch(e){}
+  try{text=extractText(JSON.parse(text))}catch(e){}
   var html=esc(text);
   html=html.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
   html=html.replace(/\n- /g,'\n<br>&bull; ').replace(/\n\* /g,'\n<br>&bull; ');
