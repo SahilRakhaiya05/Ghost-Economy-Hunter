@@ -1,0 +1,14 @@
+{
+  "name": "usage_anomaly",
+  "description": "Finds items ordered significantly more than consumed, indicating waste or over-procurement",
+  "type": "esql",
+  "parameters": [
+    {
+      "name": "threshold_pct",
+      "type": "float",
+      "description": "Minimum over-order ratio to flag (default 0.25)",
+      "default": 0.25
+    }
+  ],
+  "query": "FROM hospital-drugs\n| STATS\n    total_ordered = SUM(qty_ordered),\n    total_used    = SUM(qty_used),\n    record_count  = COUNT(*)\n  BY drug_name, wing_id\n| EVAL\n    delta_qty   = total_ordered - total_used,\n    waste_ratio = TO_DOUBLE(total_ordered - total_used) / TO_DOUBLE(total_ordered)\n| WHERE waste_ratio > 0.25\n| SORT waste_ratio DESC\n| LIMIT 20\n| KEEP drug_name, wing_id, total_ordered, total_used, delta_qty, waste_ratio"
+}

@@ -1,0 +1,26 @@
+---
+description: ES|QL tool design and usage rules for Ghost Economy Hunter
+globs: elastic/tools/**/*.json
+alwaysApply: false
+---
+
+## Ghost Economy Hunter — ES|QL Tool Rules
+
+- **Language**: All tools use ES\|QL (not Query DSL) unless ES\|QL cannot express the query.
+- **Pattern**: Follow `FROM index-name-* | WHERE ... | STATS ... BY ... | LIMIT N` with aliases for computed fields.
+- **Limits**: Always add `| LIMIT N` with `N <= 1000` and avoid deprecated commands (no `SORT` after grouping if deprecated).
+- **usage_anomaly tool**:
+  - Detects over-procurement in `hospital-drugs` using aggregated `qty_ordered` vs `qty_used`.
+  - Exposes a `threshold_pct` parameter controlling the minimum waste ratio.
+  - Returns `drug_name`, `wing_id`, order/use totals, `delta_qty`, and `waste_ratio`.
+- **runtime_anomaly tool**:
+  - Detects idle equipment in `factory-iot-data` using off-shift `runtime_minutes`.
+  - Uses `min_idle_minutes` to flag high average idle time and computes `estimated_cost` with a documented `cost_per_hour`.
+  - Returns `machine_id`, idle metrics, and `estimated_cost`.
+- **energy_anomaly tool**:
+  - Detects wasted building energy in `nyc-buildings` where occupancy is low and energy high.
+  - Uses `max_occupancy_pct` and computes `total_energy_cost` and `waste_score`.
+- **value_calculator tool**:
+  - Looks up `unit_cost_usd` and `unit_label` from `pricing-reference` by `item_key`.
+  - Always returns at most one row and is the single source of truth for pricing in this project.
+

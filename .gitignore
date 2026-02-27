@@ -1,1 +1,6 @@
+.env
 doc.txt
+__pycache__/
+*.py[cod]
+.venv/
+venv/

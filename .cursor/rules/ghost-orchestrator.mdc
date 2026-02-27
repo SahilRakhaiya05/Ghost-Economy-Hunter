@@ -1,0 +1,23 @@
+---
+description: Orchestrator Python rules for chaining Ghost Economy Hunter agents
+globs: orchestrator/**/*.py
+alwaysApply: false
+---
+
+## Ghost Economy Hunter — Orchestrator Rules
+
+- **Entry point**: `orchestrator/main.py` is the single entry point that chains Cartographer → Pattern Seeker → Valuator → Action Taker.
+- **Agent calls**:
+  - All calls to Elastic Agent Builder go through a helper (e.g., `call_agent`) that wraps the Kibana API; do not inline HTTP calls elsewhere.
+  - `AGENT_IDS` are configured values (filled from real IDs in Kibana), not hardcoded in multiple places.
+- **Config & secrets**:
+  - Load configuration via `python-dotenv` from `.env` (e.g., `ELASTIC_URL`, `ELASTIC_API_KEY`, `KIBANA_URL`).
+  - Never hardcode URLs or API keys; use environment variables only.
+- **Types & docstrings**:
+  - All functions (including `run_hunt` and helpers) use type hints and docstrings with `Args` and `Returns`.
+- **Logging**:
+  - Use the `logging` module with a named logger (e.g., `ghost-economy`) and structured messages; do not use `print` for production paths.
+- **JSON handling**:
+  - Assume agents always return JSON matching their documented `OUTPUT FORMAT`; parse with `json.loads` and handle errors explicitly.
+  - User-facing summaries and totals must be formatted using the dedicated value formatting helpers (not inline).
+

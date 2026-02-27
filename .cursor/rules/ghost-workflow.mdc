@@ -1,0 +1,19 @@
+---
+description: Elastic Workflow YAML rules for Ghost Economy Hunter action workflow
+globs: elastic/workflows/**/*.yaml
+alwaysApply: false
+---
+
+## Ghost Economy Hunter — Workflow Rules
+
+- **Workflow name**: Use `ghost-economy-action-workflow` as the main action workflow name and keep description aligned with the guide.
+- **Triggering**: Workflows are triggered manually by the Action Taker agent; do not add unrelated automatic triggers.
+- **Inputs**: Ensure required inputs match the guide (`anomaly_id`, `entity`, `dollar_value`, `category`, `calculation`, `confidence`, `slack_message`) with correct types.
+- **Exception handling**:
+  - First step searches `known-exceptions` by `entity_id` and current date range.
+  - If an exception is found, index an audit document into `ghost-economy-audit` with `action_taken: suppressed_exception` and stop.
+- **Normal path** (no exception found):
+  - Send a Slack alert using `${SLACK_WEBHOOK_URL}` and include all key fields in the message/attachments.
+  - Index an audit document into `ghost-economy-audit` with `action_taken: workflow_triggered` and `slack_sent: true`.
+- **Secrets**: Workflow HTTP steps must reference environment variables (like `${SLACK_WEBHOOK_URL}`) instead of inlining secrets or URLs.
+

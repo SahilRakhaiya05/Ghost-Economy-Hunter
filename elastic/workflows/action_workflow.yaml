@@ -1,0 +1,86 @@
+# elastic/workflows/action_workflow.yaml
+# Paste into Kibana → Workflows → Create Workflow
+name: ghost-economy-action-workflow
+description: >
+  Receives verified Ghost Economy findings from the Action Taker agent.
+  Sends Slack alert, indexes audit record, updates dashboard.
+
+triggers:
+  - type: manual   # Agent 4 calls this via the workflow tool
+
+inputs:
+  anomaly_id:    { type: string, required: true }
+  entity:        { type: string, required: true }
+  dollar_value:  { type: number, required: true }
+  category:      { type: string, required: true }
+  calculation:   { type: string, required: true }
+  confidence:    { type: number, required: true }
+  slack_message: { type: string, required: true }
+
+steps:
+
+  # STEP 1: Check if this entity is a known exception
+  - id: check_exceptions
+    type: elasticsearch.search
+    config:
+      index: known-exceptions
+      query:
+        bool:
+          must:
+            - match: { entity_id: '{{inputs.anomaly_id}}' }
+          filter:
+            - range:
+                start_date: { lte: 'now' }
+                end_date:   { gte: 'now' }
+
+  # STEP 2: If exception found, log and stop
+  - id: handle_exception
+    type: if
+    condition: '{{steps.check_exceptions.hits.total.value}} > 0'
+    then:
+      - id: log_suppressed
+        type: elasticsearch.index
+        config:
+          index: ghost-economy-audit
+          document:
+            '@timestamp': '{{now}}'
+            finding_id: '{{inputs.anomaly_id}}'
+            entity: '{{inputs.entity}}'
+            dollar_value: '{{inputs.dollar_value}}'
+            action_taken: suppressed_exception
+    else:
+      # STEP 3a: Send Slack notification
+      - id: slack_alert
+        type: http.post
+        config:
+          url: '${SLACK_WEBHOOK_URL}'
+          headers:
+            Content-Type: application/json
+          body:
+            text: '{{inputs.slack_message}}'
+            attachments:
+              - color: danger
+                fields:
+                  - title: Entity
+                    value: '{{inputs.entity}}'
+                  - title: Dollar Value
+                    value: '${{inputs.dollar_value}}'
+                  - title: Calculation
+                    value: '{{inputs.calculation}}'
+                  - title: Confidence
+                    value: '{{inputs.confidence}}'
+      # STEP 3b: Index audit record
+      - id: index_audit
+        type: elasticsearch.index
+        config:
+          index: ghost-economy-audit
+          document:
+            '@timestamp': '{{now}}'
+            finding_id: '{{inputs.anomaly_id}}'
+            entity: '{{inputs.entity}}'
+            category: '{{inputs.category}}'
+            dollar_value: '{{inputs.dollar_value}}'
+            calculation: '{{inputs.calculation}}'
+            confidence: '{{inputs.confidence}}'
+            action_taken: workflow_triggered
+            slack_sent: true

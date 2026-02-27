@@ -1,0 +1,95 @@
+---
+description: Rules for Ghost Economy Hunter Elastic AI project
+alwaysApply: true
+---
+
+## Ghost Economy Hunter — Project Rules
+
+- **Role**: You are an expert Python/Elastic developer building Ghost Economy Hunter, a multi-agent AI system on Elastic Agent Builder that finds hidden financial waste in any organization's Elasticsearch data.
+
+### Tech Stack (always use, never alternatives)
+- **Backend**: Python 3.11+ only.
+- **Elastic client**: `elasticsearch-py` 8.x.
+- **Agent Builder**: Elastic Agent Builder REST API (Kibana API).
+- **Queries**: ES\|QL only (prefer ES\|QL; use Query DSL only when absolutely forced).
+- **Workflows**: Elastic Workflows YAML syntax.
+- **Data generation**: `faker`, `numpy`, `pandas`.
+- **HTTP**: `requests` or `httpx` (never `urllib`).
+- **Config**: `python-dotenv` with a `.env` file.
+- **Testing**: `pytest`.
+
+### File / Project Structure (must be respected)
+- **Root layout**: Assume and help maintain this structure:
+  - `ghost-economy-hunter/` with:
+    - `.cursorrules` (this file or equivalent rules)
+    - `.env` (secrets, never committed)
+    - `.env.example` (keep in sync with required env vars)
+    - `README.md`, `requirements.txt`
+    - `data/` (`generate_factory.py`, `generate_hospital.py`, `fetch_nyc_buildings.py`, `pricing_reference.json`)
+    - `elastic/setup/` (`create_indexes.py`, `index_data.py`)
+    - `elastic/tools/` ES\|QL tool JSONs (`usage_anomaly.json`, `runtime_anomaly.json`, `energy_anomaly.json`, `value_calculator.json`)
+    - `elastic/agents/` agent JSONs (`cartographer.json`, `pattern_seeker.json`, `valuator.json`, `action_taker.json`)
+    - `elastic/workflows/` (`action_workflow.yaml`)
+    - `orchestrator/` (`main.py`, `elastic_client.py`, `agent_caller.py`, `value_formatter.py`)
+    - `dashboard/` (`kibana_dashboard.json`).
+
+### Core Coding Rules
+- **Secrets**: All secrets go in `.env`; never hardcode URLs, credentials, or API keys; never commit `.env`.
+- **Elasticsearch queries**:
+  - Use ES\|QL for all queries where possible.
+  - Prefer `FROM index-name-* | WHERE ... | STATS ... BY ... | LIMIT N`.
+  - Do not use Query DSL unless ES\|QL cannot express the query.
+- **Agent Builder**:
+  - All Agent Builder calls go through `orchestrator/agent_caller.py`, never inline in `main.py` or other modules.
+- **Value formatting**:
+  - All dollar values are formatted via `orchestrator/value_formatter.py`; never format currency inline.
+- **Function style**:
+  - Every function has type hints and a docstring with **Args** and **Returns** sections.
+- **ES\|QL validation**:
+  - ES\|QL queries should be testable in Kibana Dev Tools and conceptually validated there before being finalized in code.
+- **Logging and errors**:
+  - Use Python `logging` (module-level logger) for all operational logs; never use `print()` in production paths.
+  - Handle Elasticsearch errors explicitly (e.g., `ElasticsearchException` and more specific subclasses); never use bare `except`.
+- **Index management**:
+  - Never create an index without explicit mappings; define field types in `elastic/setup/create_indexes.py`.
+  - Never hardcode index names inline; store them in a dedicated constants module (e.g., `constants.py`) and import.
+
+### ES|QL Style Guide
+- **Start**: Always start with `FROM index-name-*`.
+- **Filter**: Use `| WHERE ...` before `| STATS ...`.
+- **Aggregation**: Use `STATS ... BY ...` for grouped aggregations.
+- **Aliases**: Alias every computed field, e.g. `STATS waste = SUM(x) BY category`.
+- **Limits**: Always end with `| LIMIT N` where `N <= 1000`.
+- **No deprecated patterns**: Do not use deprecated commands such as `SORT` after `GROUP BY` if they are deprecated in ES\|QL.
+
+### Agent System Prompt Rules
+- **System prompt sections**: Every agent system prompt must contain, in order or clearly labeled:
+  - `ROLE`
+  - `MISSION`
+  - `TOOLS`
+  - `OUTPUT FORMAT`
+  - `CONSTRAINTS`
+- **Output format**:
+  - Agent `OUTPUT FORMAT` is always valid JSON, not markdown, and fields must not contain markdown formatting.
+  - Responses must always include a `confidence_score` field with value in \[0.0, 1.0\].
+- **Constraints**:
+  - `CONSTRAINTS` section must always include:
+    - Never fabricate data; clearly indicate when data is missing.
+    - Always cite which tool and query produced each piece of data or conclusion.
+
+### Naming Conventions
+- **Indexes**: kebab-case, e.g. `factory-iot-data`, `hospital-drugs`, `nyc-buildings`.
+- **Fields**: snake_case, e.g. `quantity_ordered`, `unit_cost_usd`, `runtime_minutes`.
+- **Functions**: snake_case, e.g. `call_agent()`, `format_dollar()`, `create_index()`.
+- **Classes**: PascalCase, e.g. `AgentCaller`, `ValueFormatter`, `ElasticSetup`.
+- **Constants**: UPPER_SNAKE, e.g. `AGENT_CARTOGRAPHER`, `MAX_ANOMALIES`.
+- **JSON files**: kebab-case, e.g. `usage-anomaly.json`, `value-calculator.json`.
+
+### Never Do These
+- **Query choice**: Do not use Query DSL when ES\|QL can achieve the same result.
+- **Secrets**: Do not store API keys, URLs, or secrets in code or commit them to git.
+- **Error handling**: Do not catch bare `Exception`; always catch specific exceptions, especially for Elasticsearch.
+- **Agent calls**: Do not call the Agent Builder API directly from `main.py` or other code; always go through `agent_caller.py`.
+- **User output**: Do not return raw Elasticsearch JSON to the user; always post-process and format them via `value_formatter.py`.
+- **Indexes**: Do not create indices without mappings or with hardcoded names scattered across the codebase.
+

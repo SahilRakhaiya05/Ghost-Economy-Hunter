@@ -1,0 +1,33 @@
+{
+  "title": "Ghost Economy Hunter Dashboard",
+  "description": "Import in Kibana: Create Dashboard → Import. Panels to add manually (see README):",
+  "panels": [
+    {
+      "type": "metric",
+      "title": "Total Ghost Economy (USD)",
+      "source": "ghost-economy-audit",
+      "metric": "SUM(dollar_value)",
+      "label": "Total Hidden Value Found",
+      "format": "currency"
+    },
+    {
+      "type": "lens",
+      "title": "Findings by Category",
+      "source": "ghost-economy-audit",
+      "chart": "pie",
+      "slice_by": "category",
+      "size_by": "SUM(dollar_value)",
+      "top_n": 5
+    },
+    {
+      "type": "lens",
+      "title": "Detection Timeline",
+      "source": "ghost-economy-audit",
+      "chart": "bar",
+      "x_axis": "@timestamp",
+      "y_axis": "SUM(dollar_value)",
+      "color": "category"
+    }
+  ],
+  "instructions": "Kibana → Dashboard → Add panel → Metric for Total; Lens → Pie for Category; Lens → Bar for Timeline. Data source index: ghost-economy-audit."
+}

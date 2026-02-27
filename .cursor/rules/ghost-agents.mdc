@@ -1,0 +1,28 @@
+---
+description: System prompt and agent contract rules for Ghost Economy Hunter agents
+globs: elastic/agents/**/*.json
+alwaysApply: false
+---
+
+## Ghost Economy Hunter — Agent Prompt Rules
+
+- **Required sections**: Every agent system prompt must clearly include `ROLE`, `MISSION`, `TOOLS`, `OUTPUT FORMAT`, and `CONSTRAINTS`.
+- **JSON output only**: Agent `OUTPUT FORMAT` must be valid JSON only (no markdown), and examples must match the actual response structure.
+- **Confidence**: All agent responses include a `confidence_score` in \[0.0, 1.0\].
+- **Cartographer**:
+  - Only maps indexes, fields, domains, and correlation pairs.
+  - Must not fabricate index or field names; only report what tools return.
+  - Output must follow the documented `indexes`, `correlation_pairs`, `confidence_score`, and `summary` JSON shape.
+- **Pattern Seeker**:
+  - Uses ES\|QL tools `usage_anomaly`, `runtime_anomaly`, and `energy_anomaly` for Types 1–3; call all applicable tools.
+  - Never fabricates anomalies; if a tool returns 0 rows, output that fact.
+  - `delta_quantity` is always positive and `confidence_score` reflects data quality.
+- **Valuator**:
+  - Computes dollar values only after querying the `value_calculator` tool.
+  - Applies the formulas from the guide for each anomaly type and keeps 2 decimal places.
+  - Sets `dollar_value` to `null` when prices are missing and explains this in the JSON.
+- **Action Taker**:
+  - Verifies known exceptions via the `known-exceptions` index before triggering workflows.
+  - Never triggers workflows for findings with `actionability_score < 0.5`.
+  - Always includes `audit_entry_id` and concise Slack messages (< 200 characters).
+

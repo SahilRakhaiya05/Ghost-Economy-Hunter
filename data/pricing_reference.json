@@ -1,0 +1,20 @@
+[
+  {
+    "item_key": "insulin",
+    "item_name": "Insulin (per unit)",
+    "unit_cost_usd": 212.50,
+    "unit_label": "units"
+  },
+  {
+    "item_key": "press-machine-hour",
+    "item_name": "Press Machine Idle Hour",
+    "unit_cost_usd": 112.50,
+    "unit_label": "hours"
+  },
+  {
+    "item_key": "kwh-nyc",
+    "item_name": "NYC Commercial Electricity",
+    "unit_cost_usd": 0.19,
+    "unit_label": "kwh"
+  }
+]
