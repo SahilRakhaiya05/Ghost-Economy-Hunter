@@ -448,6 +448,22 @@ python run.py
 
 ---
 
+## Why Ghost Economy Hunter Stands Out
+
+| Criteria | What We Built |
+|----------|--------------|
+| **Real-world problem** | Every organization has ghost economies — $1.2 trillion in hidden waste annually across US companies alone (source: Deloitte) |
+| **Real data, not mockups** | NYC building data from official city API, retail data from real inventory records, pricing from CMS/BLS/EIA government databases |
+| **Deep Agent Builder usage** | 4 agents + 4 parameterized ES\|QL tools registered via Kibana API. MCP server + A2A protocol endpoints. Elastic Workflows for automated actions. |
+| **ES\|QL native** | Every query is ES\|QL — auditable, deterministic, zero hallucination risk. No Query DSL fallback needed. |
+| **Universal, not one-trick** | Upload any CSV from any industry. Generic scanner auto-adapts. 8 pre-built sector templates. |
+| **End-to-end pipeline** | Detection -> Dollar valuation -> Action (Slack + Workflow + Audit). Not just detection — it calculates impact and acts. |
+| **Full transparency** | Live SSE streaming shows agent reasoning, tool selection, and ES\|QL queries in real-time. Nothing hidden. |
+| **Production-grade code** | Type hints, docstrings, logging, explicit exception handling, constants module, no hardcoded secrets. One-command launch. |
+| **Beautiful UI** | 7-tab dashboard with dark/light mode, skeleton loaders, toast notifications, responsive design. Single HTML file, zero build step. |
+
+---
+
 ## License
 
 MIT
