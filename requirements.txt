@@ -5,4 +5,6 @@ pandas==2.2.3
 numpy==1.26.4
 faker==24.9.0
 pytest==8.2.0
+fastapi==0.115.0
+uvicorn==0.30.0
 

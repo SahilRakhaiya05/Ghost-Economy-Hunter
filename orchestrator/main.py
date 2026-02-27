@@ -328,13 +328,14 @@ def run_valuator(patterns: Dict[str, Any]) -> Dict[str, Any]:
         else:
             priority = "LOW"
 
-        # Build calculation string
+        # Build calculation string — round unit_cost for clean display
+        uc = round(unit_cost, 4)
         if atype == "RUNTIME_SCHEDULE_GAP":
-            calc = f"{delta} idle hours × ${unit_cost}/hr"
+            calc = f"{delta:,} idle hours \u00d7 ${uc}/hr"
         elif atype == "ENERGY_OCCUPANCY_DIVERGENCE":
-            calc = f"{delta:,} kWh × ${unit_cost}/kWh"
+            calc = f"{delta:,} kWh \u00d7 ${uc}/kWh"
         else:
-            calc = f"{delta:,} units × ${unit_cost}/unit"
+            calc = f"{delta:,} units \u00d7 ${uc}/unit"
 
         valued_findings.append({
             "anomaly_id":       ano["id"],
