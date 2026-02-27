@@ -1,0 +1,6 @@
+{
+  "name": "energy_anomaly",
+  "type": "esql",
+  "description": "Finds buildings with high energy consumption and very low occupancy, indicating energy-occupancy divergence waste.",
+  "query": "FROM nyc-buildings\n| STATS\n    avg_occupancy    = AVG(occupancy_pct),\n    total_energy_kwh = SUM(energy_kwh)\n  BY building_id, borough\n| EVAL\n    total_energy_cost = total_energy_kwh * 0.19,\n    waste_score       = (1 - avg_occupancy) * total_energy_kwh\n| WHERE avg_occupancy < 0.15 AND total_energy_kwh > 5000\n| SORT total_energy_cost DESC\n| LIMIT 15"
+}

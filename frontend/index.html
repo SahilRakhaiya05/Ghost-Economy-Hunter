@@ -31,6 +31,22 @@ h1 { font-size: 38px; color: #38bdf8; margin-bottom: 6px; letter-spacing: -0.5px
 .mode-live  { background: #052e16; color: #4ade80; border: 1px solid #166534; }
 .mode-demo  { background: #1e3a5f; color: #93c5fd; border: 1px solid #1d4ed8; }
 
+/* Tabs */
+.tabs { display: flex; gap: 0; margin-bottom: 32px; border-bottom: 1px solid #1e293b; }
+.tab {
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+}
+.tab:hover { color: #94a3b8; }
+.tab.active { color: #38bdf8; border-bottom-color: #38bdf8; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
 /* Button */
 .start-btn {
   background: linear-gradient(135deg, #2563eb, #1d4ed8);
@@ -90,7 +106,7 @@ h1 { font-size: 38px; color: #38bdf8; margin-bottom: 6px; letter-spacing: -0.5px
 .step-text { flex: 1; }
 .step-text strong { display: block; color: #e2e8f0; font-size: 15px; }
 .step-text span { font-size: 13px; color: #64748b; }
-.step-status { font-size: 13px; color: #64748b; min-width: 120px; text-align: right; }
+.step-status { font-size: 13px; color: #64748b; min-width: 140px; text-align: right; }
 .step.active { border-left-color: #38bdf8; background: #0f2944; }
 .step.active .step-status { color: #38bdf8; }
 .step.done { border-left-color: #22c55e; background: #052e16; }
@@ -119,6 +135,7 @@ h1 { font-size: 38px; color: #38bdf8; margin-bottom: 6px; letter-spacing: -0.5px
   padding: 20px;
   border-left: 4px solid #f59e0b;
   animation: slideIn 0.5s cubic-bezier(0.16,1,0.3,1);
+  position: relative;
 }
 .finding.energy { border-left-color: #818cf8; }
 .finding.factory { border-left-color: #f97316; }
@@ -145,6 +162,37 @@ h1 { font-size: 38px; color: #38bdf8; margin-bottom: 6px; letter-spacing: -0.5px
 .badge.medium { background: #1e3a5f; color: #93c5fd; }
 .badge.low { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
 
+/* JSON toggle */
+.json-toggle {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-size: 11px;
+  color: #475569;
+  cursor: pointer;
+  padding: 2px 8px;
+  border-radius: 6px;
+  border: 1px solid #334155;
+  background: #0f172a;
+  transition: all 0.2s;
+}
+.json-toggle:hover { color: #94a3b8; border-color: #475569; }
+.json-raw {
+  display: none;
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: #0f172a;
+  border-radius: 8px;
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #94a3b8;
+  white-space: pre-wrap;
+  word-break: break-all;
+  border: 1px solid #1e293b;
+}
+.json-raw.show { display: block; }
+
 /* Total bar */
 .total-bar {
   background: linear-gradient(135deg, #0f2944, #052e16);
@@ -152,7 +200,7 @@ h1 { font-size: 38px; color: #38bdf8; margin-bottom: 6px; letter-spacing: -0.5px
   border-radius: 16px;
   padding: 28px 32px;
   text-align: center;
-  margin-top: 8px;
+  margin-top: 16px;
   display: none;
   animation: fadeIn 0.5s ease;
 }
@@ -186,18 +234,65 @@ h1 { font-size: 38px; color: #38bdf8; margin-bottom: 6px; letter-spacing: -0.5px
   display: none;
 }
 
+/* Architecture diagram */
+.arch-section { margin-bottom: 48px; }
+.arch-diagram {
+  background: #1e293b;
+  border-radius: 16px;
+  padding: 32px;
+  border: 1px solid #334155;
+}
+.arch-flow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+.arch-node {
+  padding: 12px 18px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  min-width: 120px;
+}
+.arch-agent  { background: #1e3a5f; color: #93c5fd; border: 1px solid #2563eb; }
+.arch-tool   { background: #1a1a2e; color: #818cf8; border: 1px solid #4338ca; font-size: 11px; min-width: 100px; padding: 8px 12px; }
+.arch-data   { background: #052e16; color: #4ade80; border: 1px solid #166534; }
+.arch-action { background: #78350f; color: #fcd34d; border: 1px solid #92400e; }
+.arch-arrow  { color: #475569; font-size: 18px; flex-shrink: 0; }
+.arch-label  { font-size: 10px; color: #475569; text-align: center; margin-top: 4px; }
+.arch-row    { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 12px 0; flex-wrap: wrap; }
+.arch-sub    { font-size: 12px; color: #64748b; text-align: center; margin-top: 20px; line-height: 1.6; }
+
 /* Footer */
 .footer {
   margin-top: 64px;
   padding-top: 24px;
   border-top: 1px solid #1e293b;
   display: flex;
+  align-items: center;
   gap: 24px;
   font-size: 13px;
   color: #475569;
+  flex-wrap: wrap;
 }
 .footer a { color: #38bdf8; text-decoration: none; }
 .footer a:hover { text-decoration: underline; }
+.elastic-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  background: #1e293b;
+  color: #38bdf8;
+  border: 1px solid #334155;
+}
 </style>
 </head>
 <body>
@@ -212,112 +307,202 @@ h1 { font-size: 38px; color: #38bdf8; margin-bottom: 6px; letter-spacing: -0.5px
     <div id="modeBadge" class="mode-badge mode-demo">DEMO MODE &mdash; click Start Hunt to run live</div>
   </div>
 
-  <button class="start-btn" id="startBtn" onclick="startHunt()">&#9654; Start Hunt</button>
-
-  <div class="counter-section">
-    <div class="counter-label">Total Hidden Value Found</div>
-    <div class="counter" id="counter">$0</div>
-    <div class="counter-sub" id="counterSub">Waiting to start&hellip;</div>
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('hunt')">Hunt</div>
+    <div class="tab" onclick="switchTab('arch')">Architecture</div>
   </div>
 
-  <div class="agents">
-    <div class="section-title">Agent Pipeline</div>
-    <div class="step" id="s1">
-      <div class="step-icon">&#128506;</div>
-      <div class="step-text">
-        <strong>Agent 1 &mdash; Cartographer</strong>
-        <span>Maps all Elasticsearch indexes &amp; identifies anomaly potential</span>
-      </div>
-      <div class="step-status" id="st1">waiting</div>
+  <!-- ═══ HUNT TAB ═══ -->
+  <div id="tab-hunt" class="tab-content active">
+
+    <button class="start-btn" id="startBtn" onclick="startHunt()">&#9654; Start Hunt</button>
+
+    <div class="counter-section">
+      <div class="counter-label">Total Hidden Value Found</div>
+      <div class="counter" id="counter">$0</div>
+      <div class="counter-sub" id="counterSub">Waiting to start&hellip;</div>
     </div>
-    <div class="step" id="s2">
-      <div class="step-icon">&#128269;</div>
-      <div class="step-text">
-        <strong>Agent 2 &mdash; Pattern Seeker</strong>
-        <span>Runs 3 ES|QL tools &mdash; usage, runtime &amp; energy anomalies</span>
+
+    <div class="agents">
+      <div class="section-title">Agent Pipeline</div>
+      <div class="step" id="s1">
+        <div class="step-icon">&#128506;</div>
+        <div class="step-text">
+          <strong>Agent 1 &mdash; Cartographer</strong>
+          <span>Maps all Elasticsearch indexes &amp; identifies anomaly potential</span>
+        </div>
+        <div class="step-status" id="st1">waiting</div>
       </div>
-      <div class="step-status" id="st2">waiting</div>
-    </div>
-    <div class="step" id="s3">
-      <div class="step-icon">&#128176;</div>
-      <div class="step-text">
-        <strong>Agent 3 &mdash; Valuator</strong>
-        <span>Prices every finding using the pricing-reference index</span>
+      <div class="step" id="s2">
+        <div class="step-icon">&#128269;</div>
+        <div class="step-text">
+          <strong>Agent 2 &mdash; Pattern Seeker</strong>
+          <span>Runs 3 ES|QL tools &mdash; usage, runtime &amp; energy anomalies</span>
+        </div>
+        <div class="step-status" id="st2">waiting</div>
       </div>
-      <div class="step-status" id="st3">waiting</div>
-    </div>
-    <div class="step" id="s4">
-      <div class="step-icon">&#9889;</div>
-      <div class="step-text">
-        <strong>Agent 4 &mdash; Action Taker</strong>
-        <span>Triggers Elastic Workflow &rarr; Slack alert + audit record</span>
+      <div class="step" id="s3">
+        <div class="step-icon">&#128176;</div>
+        <div class="step-text">
+          <strong>Agent 3 &mdash; Valuator</strong>
+          <span>Prices every finding using the pricing-reference index</span>
+        </div>
+        <div class="step-status" id="st3">waiting</div>
       </div>
-      <div class="step-status" id="st4">waiting</div>
+      <div class="step" id="s4">
+        <div class="step-icon">&#9889;</div>
+        <div class="step-text">
+          <strong>Agent 4 &mdash; Action Taker</strong>
+          <span>Triggers Elastic Workflow &rarr; Slack alert + audit record</span>
+        </div>
+        <div class="step-status" id="st4">waiting</div>
+      </div>
     </div>
+
+    <div class="findings" id="findingsSection">
+      <div class="section-title">Findings</div>
+      <div class="findings-grid" id="findingsList"></div>
+      <div class="total-bar" id="totalBar">
+        <div class="big" id="totalBig">$0</div>
+        <div class="label">Total Ghost Economy Found</div>
+        <div class="sub" id="totalSub"></div>
+      </div>
+    </div>
+
+    <div class="status-bar" id="statusBar">
+      <span id="sbSlack"></span>
+      <span id="sbAudit"></span>
+      <span id="sbTime"></span>
+    </div>
+
+    <div class="error-box" id="errorBox"></div>
+
   </div>
 
-  <div class="findings" id="findingsSection">
-    <div class="section-title">Findings</div>
-    <div class="findings-grid" id="findingsList"></div>
-    <div class="total-bar" id="totalBar">
-      <div class="big" id="totalBig">$0</div>
-      <div class="label">Total Ghost Economy Found</div>
-      <div class="sub" id="totalSub"></div>
+  <!-- ═══ ARCHITECTURE TAB ═══ -->
+  <div id="tab-arch" class="tab-content">
+    <div class="arch-section">
+      <div class="section-title">System Architecture</div>
+      <div class="arch-diagram">
+
+        <div class="arch-flow">
+          <div class="arch-node arch-data">Elasticsearch<div class="arch-label">6 indexes</div></div>
+          <div class="arch-arrow">&rarr;</div>
+          <div class="arch-node arch-agent">Cartographer<div class="arch-label">maps indexes</div></div>
+          <div class="arch-arrow">&rarr;</div>
+          <div class="arch-node arch-agent">Pattern Seeker<div class="arch-label">finds anomalies</div></div>
+          <div class="arch-arrow">&rarr;</div>
+          <div class="arch-node arch-agent">Valuator<div class="arch-label">prices findings</div></div>
+          <div class="arch-arrow">&rarr;</div>
+          <div class="arch-node arch-agent">Action Taker<div class="arch-label">verifies &amp; acts</div></div>
+        </div>
+
+        <div class="section-title" style="margin-top: 28px;">ES|QL Tools</div>
+        <div class="arch-row">
+          <div class="arch-node arch-tool">usage_anomaly<div class="arch-label">hospital-drugs</div></div>
+          <div class="arch-node arch-tool">runtime_anomaly<div class="arch-label">factory-iot-data</div></div>
+          <div class="arch-node arch-tool">energy_anomaly<div class="arch-label">nyc-buildings</div></div>
+          <div class="arch-node arch-tool">value_calculator<div class="arch-label">pricing-reference</div></div>
+        </div>
+
+        <div class="section-title" style="margin-top: 28px;">Actions</div>
+        <div class="arch-row">
+          <div class="arch-node arch-action">Elastic Workflow<div class="arch-label">orchestration</div></div>
+          <div class="arch-arrow">&rarr;</div>
+          <div class="arch-node arch-action">Slack Alert<div class="arch-label">notification</div></div>
+          <div class="arch-arrow">+</div>
+          <div class="arch-node arch-data">ghost-economy-audit<div class="arch-label">audit trail</div></div>
+        </div>
+
+        <div class="arch-sub">
+          All anomaly detection uses pure ES|QL queries &mdash; deterministic, testable, no hallucination risk.<br>
+          Real data: NYC Open Data (LL84 building energy) + CMS drug pricing + synthetic IoT sensor data.
+        </div>
+      </div>
+
+      <div class="section-title" style="margin-top: 32px;">Data Indexes</div>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead>
+            <tr style="border-bottom:1px solid #334155;text-align:left;">
+              <th style="padding:10px 12px;color:#64748b;">Index</th>
+              <th style="padding:10px 12px;color:#64748b;">Domain</th>
+              <th style="padding:10px 12px;color:#64748b;">Source</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:1px solid #1e293b;">
+              <td style="padding:8px 12px;color:#38bdf8;font-family:monospace;">factory-iot-data</td>
+              <td style="padding:8px 12px;">Manufacturing IoT sensors</td>
+              <td style="padding:8px 12px;color:#64748b;">Synthetic (realistic patterns)</td>
+            </tr>
+            <tr style="border-bottom:1px solid #1e293b;">
+              <td style="padding:8px 12px;color:#38bdf8;font-family:monospace;">hospital-drugs</td>
+              <td style="padding:8px 12px;">Drug procurement</td>
+              <td style="padding:8px 12px;color:#64748b;">Synthetic + CMS pricing</td>
+            </tr>
+            <tr style="border-bottom:1px solid #1e293b;">
+              <td style="padding:8px 12px;color:#38bdf8;font-family:monospace;">nyc-buildings</td>
+              <td style="padding:8px 12px;">Building energy</td>
+              <td style="padding:8px 12px;color:#4ade80;">NYC Open Data (LL84)</td>
+            </tr>
+            <tr style="border-bottom:1px solid #1e293b;">
+              <td style="padding:8px 12px;color:#38bdf8;font-family:monospace;">pricing-reference</td>
+              <td style="padding:8px 12px;">Unit costs</td>
+              <td style="padding:8px 12px;color:#4ade80;">CMS ASP + EIA rates</td>
+            </tr>
+            <tr style="border-bottom:1px solid #1e293b;">
+              <td style="padding:8px 12px;color:#38bdf8;font-family:monospace;">known-exceptions</td>
+              <td style="padding:8px 12px;">Approved exceptions</td>
+              <td style="padding:8px 12px;color:#64748b;">Sample records</td>
+            </tr>
+            <tr>
+              <td style="padding:8px 12px;color:#38bdf8;font-family:monospace;">ghost-economy-audit</td>
+              <td style="padding:8px 12px;">Audit trail</td>
+              <td style="padding:8px 12px;color:#64748b;">Pipeline output</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
-
-  <div class="status-bar" id="statusBar">
-    <span id="sbSlack"></span>
-    <span id="sbAudit"></span>
-    <span id="sbTime"></span>
-  </div>
-
-  <div class="error-box" id="errorBox"></div>
 
   <div class="footer">
-    <span>Built with Elastic Agent Builder + ES|QL</span>
-    <a href="https://github.com/SahilRakhaiya05/Ghost-Economy-Hunter" target="_blank">&#128279; GitHub</a>
-    <a href="https://elasticsearch.devpost.com" target="_blank">&#127942; Devpost</a>
+    <span class="elastic-badge">
+      <svg width="16" height="16" viewBox="0 0 64 64"><path d="M32 0C14.3 0 0 14.3 0 32s14.3 32 32 32 32-14.3 32-32S49.7 0 32 0z" fill="#38bdf8" opacity="0.2"/><path d="M47 22H17l15-14 15 14zM47 42H17l15 14 15-14zM14 32l8-8h20l8 8-8 8H22l-8-8z" fill="#38bdf8"/></svg>
+      Powered by Elastic Agent Builder + ES|QL
+    </span>
+    <a href="https://github.com/SahilRakhaiya05/Ghost-Economy-Hunter" target="_blank">GitHub</a>
+    <a href="https://elasticsearch.devpost.com" target="_blank">Devpost</a>
   </div>
 
 </div>
 
 <script>
-// ── Config ──────────────────────────────────────────────────────────────────
-// When served via `python api.py` (http://localhost:8000) the real pipeline runs.
-// When opened as a file (file://) fallback demo data is used.
-const API_URL = '/api/run';
+var API_URL = '/api/run';
+var huntStartTime = 0;
 
-// Fallback demo data used when backend is unreachable (file:// or network error)
-const DEMO_FINDINGS = [
-  {
-    id: 'ANO-001',
-    entity: 'Insulin \u2014 Hospital Wing C',
-    category: 'Drug Over-Procurement',
-    dollar: 179964,
-    calc: '847 units \u00d7 $212.50/unit over 180 days',
-    priority: 'CRITICAL'
-  },
-  {
-    id: 'ANO-002',
-    entity: 'PRESS-02 \u2014 Factory Floor',
-    category: 'Idle Equipment Runtime',
-    dollar: 94500,
-    calc: '840 idle hours \u00d7 $112.50/hr over 90 days',
-    priority: 'HIGH'
-  },
-  {
-    id: 'ANO-003',
-    entity: 'BLDG-047 \u2014 Manhattan',
-    category: 'Energy-Occupancy Waste',
-    dollar: 340700,
-    calc: '1,793,158 kWh \u00d7 $0.19/kWh at 8% avg occupancy',
-    priority: 'CRITICAL'
-  }
+var DEMO_FINDINGS = [
+  { id: 'ANO-001', entity: 'Insulin \u2014 Wing C', category: 'Drug Over-Procurement', dollar: 2135200, calc: '10,048 units \u00d7 $212.50/unit', priority: 'CRITICAL' },
+  { id: 'ANO-002', entity: 'PRESS-02 \u2014 Factory Floor', category: 'Idle Equipment Runtime', dollar: 76612.50, calc: '681 idle hours \u00d7 $112.50/hr', priority: 'HIGH' },
+  { id: 'ANO-003', entity: 'BLD-MA-00 \u2014 Manhattan', category: 'Energy-Occupancy Waste', dollar: 19604, calc: '103,177 kWh \u00d7 $0.19/kWh', priority: 'MEDIUM' }
 ];
-const DEMO_TOTAL = 615164;
+var DEMO_TOTAL = 2231416;
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+function switchTab(name) {
+  var tabs = document.querySelectorAll('.tab');
+  var contents = document.querySelectorAll('.tab-content');
+  for (var i = 0; i < tabs.length; i++) { tabs[i].classList.remove('active'); }
+  for (var i = 0; i < contents.length; i++) { contents[i].classList.remove('active'); }
+  if (name === 'arch') {
+    tabs[1].classList.add('active');
+    document.getElementById('tab-arch').classList.add('active');
+  } else {
+    tabs[0].classList.add('active');
+    document.getElementById('tab-hunt').classList.add('active');
+  }
+}
+
 function setStep(n, state, text) {
   document.getElementById('s' + n).className = 'step ' + state;
   var el = document.getElementById('st' + n);
@@ -338,18 +523,15 @@ function animateCounter(target, duration) {
     var eased = 1 - Math.pow(1 - progress, 4);
     var current = Math.round(startVal + (target - startVal) * eased);
     counter.textContent = '$' + current.toLocaleString();
-    if (progress < 1) {
-      requestAnimationFrame(update);
-    } else {
-      counter.classList.add('final');
-    }
+    if (progress < 1) { requestAnimationFrame(update); }
+    else { counter.classList.add('final'); }
   }
   requestAnimationFrame(update);
 }
 
-function colorClass(category) {
-  if (!category) return '';
-  var c = category.toLowerCase();
+function colorClass(cat) {
+  if (!cat) return '';
+  var c = cat.toLowerCase();
   if (c.indexOf('energy') >= 0) return 'energy';
   if (c.indexOf('idle') >= 0 || c.indexOf('runtime') >= 0) return 'factory';
   return '';
@@ -360,27 +542,24 @@ function addFinding(f) {
   var grid = document.getElementById('findingsList');
   var div = document.createElement('div');
   div.className = 'finding ' + colorClass(f.category);
-  var priority = (f.priority || 'MEDIUM').toLowerCase();
+  var pri = (f.priority || 'MEDIUM').toLowerCase();
+  var jsonStr = JSON.stringify(f, null, 2);
   div.innerHTML =
+    '<div class="json-toggle" onclick="this.parentNode.querySelector(\'.json-raw\').classList.toggle(\'show\')">&lt;/&gt; JSON</div>' +
     '<div class="finding-entity">' + esc(f.entity) + '</div>' +
     '<div class="finding-category">' + esc(f.category) + '</div>' +
     '<div class="finding-dollar">$' + Math.round(f.dollar).toLocaleString() + '</div>' +
     '<div class="finding-calc">' + esc(f.calc) + '</div>' +
-    '<span class="badge ' + priority + '">' + (f.priority || 'MEDIUM') + '</span>';
+    '<span class="badge ' + pri + '">' + (f.priority || 'MEDIUM') + '</span>' +
+    '<div class="json-raw">' + esc(jsonStr) + '</div>';
   grid.appendChild(div);
 }
 
 function esc(s) {
-  return String(s)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-function sleep(ms) {
-  return new Promise(function(r) { setTimeout(r, ms); });
-}
+function sleep(ms) { return new Promise(function(r) { setTimeout(r, ms); }); }
 
 function showError(msg) {
   var box = document.getElementById('errorBox');
@@ -388,8 +567,8 @@ function showError(msg) {
   box.style.display = 'block';
 }
 
-// ── Main hunt logic ──────────────────────────────────────────────────────────
 async function startHunt() {
+  huntStartTime = Date.now();
   var btn = document.getElementById('startBtn');
   btn.disabled = true;
   btn.textContent = '\u23f3 Running\u2026';
@@ -401,14 +580,11 @@ async function startHunt() {
   document.getElementById('statusBar').style.display = 'none';
   document.getElementById('counter').className = 'counter';
   document.getElementById('counter').textContent = '$0';
-  ['s1','s2','s3','s4'].forEach(function(id) {
-    document.getElementById(id).className = 'step';
-  });
-  ['st1','st2','st3','st4'].forEach(function(id) {
-    document.getElementById(id).textContent = 'waiting';
-  });
+  var steps = ['s1','s2','s3','s4'];
+  for (var i = 0; i < steps.length; i++) { document.getElementById(steps[i]).className = 'step'; }
+  var sts = ['st1','st2','st3','st4'];
+  for (var i = 0; i < sts.length; i++) { document.getElementById(sts[i]).textContent = 'waiting'; }
 
-  // Kick off real pipeline in background (POST /api/run)
   var pipelinePromise = null;
   var useLive = (window.location.protocol !== 'file:');
   if (useLive) {
@@ -417,29 +593,24 @@ async function startHunt() {
     pipelinePromise = fetch(API_URL, { method: 'POST' }).then(function(r) { return r.json(); });
   }
 
-  // Step 1 — Cartographer animation
   setStep(1, 'active', '');
   await sleep(useLive ? 2000 : 2500);
   setStep(1, 'done', '\u2713 indexes mapped');
   document.getElementById('counterSub').textContent = 'Mapped 6 indexes across 3 industries';
 
-  // Step 2 — Pattern Seeker
   setStep(2, 'active', '');
   await sleep(useLive ? 3000 : 3500);
   setStep(2, 'done', '\u2713 anomalies found');
 
-  // Step 3 — Valuator (start counting up from 0)
   setStep(3, 'active', '');
   animateCounter(useLive ? 500000 : DEMO_TOTAL, 3000);
   await sleep(3000);
   setStep(3, 'done', '\u2713 values calculated');
 
-  // Step 4 — Action Taker
   setStep(4, 'active', '');
   await sleep(useLive ? 2000 : 2000);
   setStep(4, 'done', '\u2713 workflows triggered');
 
-  // Now resolve real data
   var data = null;
   if (useLive && pipelinePromise) {
     try {
@@ -456,38 +627,32 @@ async function startHunt() {
   var total    = data ? data.total    : DEMO_TOTAL;
   var triggered = data ? data.actions_triggered : 3;
   var indexCount = data ? data.index_count : 6;
+  var elapsedSec = ((Date.now() - huntStartTime) / 1000).toFixed(1);
 
-  // Update step labels with real numbers
   document.getElementById('st1').textContent = '\u2713 ' + indexCount + ' indexes mapped';
   document.getElementById('st2').textContent = '\u2713 ' + findings.length + ' anomalies found';
   document.getElementById('st4').textContent = '\u2713 ' + triggered + ' workflows triggered';
 
-  // Show findings cards
   document.getElementById('findingsSection').style.display = 'block';
   for (var i = 0; i < findings.length; i++) {
     addFinding(findings[i]);
     await sleep(600);
   }
 
-  // Animate counter to real total
   animateCounter(total, 2000);
   document.getElementById('counterSub').textContent =
     findings.length + ' findings across hospital, manufacturing & real estate';
 
-  // Total bar
-  var totalBar = document.getElementById('totalBar');
   document.getElementById('totalBig').textContent = '$' + Math.round(total).toLocaleString();
   document.getElementById('totalSub').textContent =
-    findings.length + ' findings \u2022 ' + triggered + ' Slack alerts sent \u2022 audit records indexed';
-  totalBar.style.display = 'block';
+    findings.length + ' findings \u2022 ' + triggered + ' Slack alerts \u2022 ' + elapsedSec + 's pipeline time';
+  document.getElementById('totalBar').style.display = 'block';
 
-  // Status bar
   document.getElementById('sbSlack').textContent = '\u2705 ' + triggered + ' Slack alerts sent';
-  document.getElementById('sbAudit').textContent = '\u2705 ' + findings.length + ' audit records in Elasticsearch';
-  document.getElementById('sbTime').textContent = '\u2705 ghost-economy-audit index updated';
+  document.getElementById('sbAudit').textContent = '\u2705 ' + findings.length + ' audit records indexed';
+  document.getElementById('sbTime').textContent = '\u23f1\ufe0f ' + elapsedSec + 's total';
   document.getElementById('statusBar').style.display = 'block';
 
-  // Finish
   btn.textContent = '\u2705 Hunt Complete \u2014 Run Again';
   btn.disabled = false;
 }

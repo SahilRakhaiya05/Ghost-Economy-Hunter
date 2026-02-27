@@ -1,20 +1,42 @@
 [
   {
     "item_key": "insulin",
-    "item_name": "Insulin (per unit)",
+    "item_name": "Insulin (Glargine, 100 units/mL vial)",
     "unit_cost_usd": 212.50,
-    "unit_label": "units"
+    "unit_label": "units",
+    "source": "CMS Medicare Part B ASP + hospital markup (WAC basis)",
+    "effective_date": "2025-Q4"
+  },
+  {
+    "item_key": "metformin",
+    "item_name": "Metformin HCl 500mg (30 tablets)",
+    "unit_cost_usd": 4.20,
+    "unit_label": "units",
+    "source": "CMS NADAC (National Average Drug Acquisition Cost)",
+    "effective_date": "2025-Q4"
+  },
+  {
+    "item_key": "amoxicillin",
+    "item_name": "Amoxicillin 500mg (30 capsules)",
+    "unit_cost_usd": 7.80,
+    "unit_label": "units",
+    "source": "CMS NADAC (National Average Drug Acquisition Cost)",
+    "effective_date": "2025-Q4"
   },
   {
     "item_key": "press-machine-hour",
-    "item_name": "Press Machine Idle Hour",
+    "item_name": "Industrial Press Machine Idle Hour",
     "unit_cost_usd": 112.50,
-    "unit_label": "hours"
+    "unit_label": "hours",
+    "source": "BLS Producer Price Index for metalworking machinery (2024 avg)",
+    "effective_date": "2024-annual"
   },
   {
     "item_key": "kwh-nyc",
-    "item_name": "NYC Commercial Electricity",
-    "unit_cost_usd": 0.19,
-    "unit_label": "kwh"
+    "item_name": "NYC Commercial Electricity Rate",
+    "unit_cost_usd": 0.22,
+    "unit_label": "kwh",
+    "source": "EIA (U.S. Energy Information Administration) NYC commercial avg",
+    "effective_date": "2025-09"
   }
 ]

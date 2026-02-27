@@ -1,17 +1,19 @@
-"""Ghost Economy Hunter — Convenience data generator.
+"""Ghost Economy Hunter -- Convenience data generator.
 
-Generates and indexes all synthetic data for all three domains:
+Generates and indexes all data for all three domains:
   - Factory IoT (90 days, 3 machines)
-  - Hospital drugs (180 days, 4 wings, 3 drugs)
-  - NYC buildings (365 days, 3 buildings)
-  - Pricing reference (5 items)
+  - Hospital drugs (180 days, 4 wings)
+  - NYC buildings (real NYC Open Data + synthetic anomaly overlay)
+  - Pricing reference (5 items with real market rates)
 
 Usage:
     python data/generate_all.py
 """
 from __future__ import annotations
 
+import json
 import logging
+import os
 import sys
 from pathlib import Path
 
@@ -19,31 +21,32 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from dotenv import load_dotenv
 from elasticsearch import Elasticsearch
-from elasticsearch.helpers import bulk
 from elasticsearch.exceptions import ApiError
+from elasticsearch.helpers import bulk
 
 from data.generate_factory import generate_docs as factory_docs
 from data.generate_hospital import generate_docs as hospital_docs
 from data.fetch_nyc_buildings import generate_docs as buildings_docs
-
-import os
 
 load_dotenv()
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger("ghost-economy-generate")
 
-PRICING_ITEMS = [
-    {"item_key": "insulin",             "item_name": "Insulin per unit",            "unit_cost_usd": 212.50, "unit_label": "units"},
-    {"item_key": "metformin",           "item_name": "Metformin per unit",           "unit_cost_usd": 45.00,  "unit_label": "units"},
-    {"item_key": "amoxicillin",         "item_name": "Amoxicillin per unit",         "unit_cost_usd": 18.00,  "unit_label": "units"},
-    {"item_key": "press-machine-hour",  "item_name": "Press Machine Idle Hour",      "unit_cost_usd": 112.50, "unit_label": "hours"},
-    {"item_key": "kwh-nyc",             "item_name": "NYC Commercial Electricity",   "unit_cost_usd": 0.19,   "unit_label": "kwh"},
-]
+
+def _load_pricing() -> list:
+    """Load pricing items from pricing_reference.json.
+
+    Returns:
+        List of pricing item dicts.
+    """
+    pricing_path = Path(__file__).parent / "pricing_reference.json"
+    with open(pricing_path, encoding="utf-8") as f:
+        return json.load(f)
 
 
 def main() -> None:
-    """Generate and index all synthetic data.
+    """Generate and index all data into Elasticsearch.
 
     Returns:
         None
@@ -64,15 +67,39 @@ def main() -> None:
         bulk(es, hdocs)
         log.info("Indexed %d hospital records", len(hdocs))
 
-        log.info("Generating NYC building data...")
+        log.info("Generating NYC building data (fetching from NYC Open Data)...")
         bdocs = buildings_docs()
         bulk(es, bdocs)
         log.info("Indexed %d building records", len(bdocs))
 
-        log.info("Indexing pricing reference...")
-        for item in PRICING_ITEMS:
+        log.info("Indexing pricing reference (real market rates)...")
+        pricing_items = _load_pricing()
+        for item in pricing_items:
             es.index(index="pricing-reference", id=item["item_key"], document=item)
-        log.info("Indexed %d pricing items", len(PRICING_ITEMS))
+        log.info("Indexed %d pricing items", len(pricing_items))
+
+        log.info("Indexing known-exceptions (sample records)...")
+        exceptions = [
+            {
+                "entity_id": "PRESS-01",
+                "reason": "Scheduled maintenance window - approved by operations manager",
+                "start_date": "2025-12-01",
+                "end_date": "2026-01-15",
+            },
+            {
+                "entity_id": "Wing A",
+                "reason": "Renovation period - temporary over-ordering approved by pharmacy board",
+                "start_date": "2025-11-01",
+                "end_date": "2026-03-01",
+            },
+        ]
+        for exc_record in exceptions:
+            es.index(
+                index="known-exceptions",
+                id=exc_record["entity_id"],
+                document=exc_record,
+            )
+        log.info("Indexed %d known-exception records", len(exceptions))
 
         log.info("ALL DATA READY")
 

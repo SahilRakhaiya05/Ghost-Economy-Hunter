@@ -6,20 +6,93 @@
 
 ---
 
-## What It Does
+## The Problem
 
-Every organization has money hiding in its own data — drugs ordered but never used, machines running during off-shifts, empty buildings consuming full power. Ghost Economy Hunter finds it automatically.
+Every organization leaks money through invisible inefficiencies buried in operational data:
+- Hospitals over-order drugs that expire unused (US GAO estimates $765B/yr in healthcare waste)
+- Factories run equipment during off-shifts burning $50K-200K/year per machine
+- Commercial buildings consume full power at 8% occupancy (DOE: 30% of building energy is wasted)
 
-**The pipeline:**
+These patterns hide in plain sight across Elasticsearch indexes. No one asks the right questions because **no one knows the questions exist**.
 
-| Agent | Role | Tool |
-|---|---|---|
-| Cartographer | Maps all Elasticsearch indexes | Built-in index introspection |
-| Pattern Seeker | Finds waste anomalies via ES\|QL | `usage_anomaly`, `runtime_anomaly`, `energy_anomaly` |
-| Valuator | Assigns dollar values to every finding | `value_calculator` |
-| Action Taker | Verifies findings, fires Elastic Workflow | `trigger_action_workflow` |
+## The Solution
 
-**In our demo across 3 industries, it found $2.2M+ in hidden waste in under 90 seconds.**
+Ghost Economy Hunter doesn't wait for questions. It deploys 4 AI agents that autonomously scan, correlate, and value hidden waste across any number of Elasticsearch indexes -- zero configuration required.
+
+---
+
+## Architecture
+
+```mermaid
+flowchart TD
+    subgraph dataLayer [Data Layer]
+        ES[(Elasticsearch)]
+        IDX1[factory-iot-data]
+        IDX2[hospital-drugs]
+        IDX3[nyc-buildings]
+        IDX4[pricing-reference]
+        IDX5[known-exceptions]
+        IDX6[ghost-economy-audit]
+        ES --- IDX1 & IDX2 & IDX3 & IDX4 & IDX5 & IDX6
+    end
+
+    subgraph agentPipeline [Agent Pipeline]
+        A1["Agent 1: Cartographer"]
+        A2["Agent 2: Pattern Seeker"]
+        A3["Agent 3: Valuator"]
+        A4["Agent 4: Action Taker"]
+        A1 -->|"index map"| A2
+        A2 -->|"anomalies"| A3
+        A3 -->|"valued findings"| A4
+    end
+
+    subgraph tools [ES|QL Tools]
+        T1[usage_anomaly]
+        T2[runtime_anomaly]
+        T3[energy_anomaly]
+        T4[value_calculator]
+    end
+
+    subgraph actions [Actions]
+        SL[Slack Alerts]
+        AU[Audit Index]
+        WF[Elastic Workflow]
+    end
+
+    A1 -->|"ES|QL COUNT"| ES
+    A2 --> T1 & T2 & T3
+    T1 & T2 & T3 -->|"ES|QL queries"| ES
+    A3 --> T4
+    T4 -->|"pricing lookup"| ES
+    A4 --> WF
+    WF --> SL & AU
+    AU --> IDX6
+
+    FE[Frontend UI] -->|"POST /api/run"| API[FastAPI Server]
+    API --> A1
+```
+
+### Agent Roles
+
+| # | Agent | Role | Tools | Output |
+|---|-------|------|-------|--------|
+| 1 | **Cartographer** | Maps all indexes, identifies anomaly potential | Built-in ES introspection | Index map with domains and correlation pairs |
+| 2 | **Pattern Seeker** | Runs 3 ES\|QL anomaly queries | `usage_anomaly`, `runtime_anomaly`, `energy_anomaly` | Typed anomalies with delta quantities |
+| 3 | **Valuator** | Prices every anomaly using reference data | `value_calculator` | Dollar-valued findings with priority |
+| 4 | **Action Taker** | Verifies, scores actionability, fires workflows | `trigger_action_workflow` | Slack alerts + audit records |
+
+---
+
+## Data Sources
+
+| Index | Domain | Source | Records |
+|-------|--------|--------|---------|
+| `factory-iot-data` | Manufacturing IoT | Synthetic (realistic sensor patterns) | ~8,100 |
+| `hospital-drugs` | Drug procurement | Synthetic + real CMS drug pricing | ~720 |
+| `nyc-buildings` | Building energy | [NYC Open Data LL84](https://data.cityofnewyork.us/) + synthetic anomaly overlay | ~1,800 |
+| `pricing-reference` | Unit costs | Real market rates (CMS ASP, EIA electricity) | 5 |
+| `known-exceptions` | Approved exceptions | Sample exception records | 2 |
+| `ghost-economy-audit` | Audit trail | Pipeline output | grows per run |
 
 ---
 
@@ -38,43 +111,37 @@ pip install -r requirements.txt
 
 ### 2. Configure credentials
 
-Copy `.env.example` to `.env` and fill in your values:
-
 ```bash
 cp .env.example .env
 ```
 
-```
-ELASTIC_URL=https://your-project.es.us-east-1.aws.elastic.cloud
-ELASTIC_API_KEY=your_api_key_here
-KIBANA_URL=https://your-project.kb.us-east-1.aws.elastic.cloud
-SLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/WEBHOOK/URL
-```
+Fill in your Elasticsearch, Kibana, and Slack webhook URLs in `.env`.
 
-### 3. Create indexes
+### 3. Create indexes and generate data
 
 ```bash
 python elastic/setup/create_indexes.py
-```
-
-### 4. Generate data
-
-```bash
 python data/generate_all.py
 ```
 
-### 5. Run the live demo
+### 4. Run the live demo
 
 ```bash
 python api.py
 ```
 
-Open [http://localhost:8000](http://localhost:8000) — click **Start Hunt** to run the real pipeline against your Elasticsearch data.
+Open [http://localhost:8000](http://localhost:8000) and click **Start Hunt** to run the real pipeline against live Elasticsearch data.
 
-### 6. Run the pipeline directly (CLI)
+### 5. Run the pipeline directly (CLI)
 
 ```bash
 python -m orchestrator.main
+```
+
+### 6. Run tests
+
+```bash
+pytest tests/ -v
 ```
 
 ---
@@ -83,66 +150,57 @@ python -m orchestrator.main
 
 ```
 ghost-economy-hunter/
-├── api.py                      # FastAPI server — serves frontend + /api/run endpoint
-├── constants.py                # Index names, agent IDs
+├── api.py                          # FastAPI server (frontend + /api/run)
+├── constants.py                    # Index names, agent IDs
 ├── requirements.txt
 ├── .env.example
 │
 ├── data/
-│   ├── generate_all.py         # Convenience: generates all 3 domains at once
-│   ├── generate_factory.py     # Factory IoT (90 days, 3 machines, idle anomaly)
-│   ├── generate_hospital.py    # Hospital drugs (180 days, Wing-C over-ordering)
-│   ├── fetch_nyc_buildings.py  # NYC buildings (365 days, BLDG-047 energy waste)
-│   └── pricing_reference.json  # Unit cost reference data
+│   ├── generate_all.py             # One-command data generation
+│   ├── generate_factory.py         # Factory IoT sensor data
+│   ├── generate_hospital.py        # Hospital drug procurement data
+│   ├── fetch_nyc_buildings.py      # NYC building energy data (real + synthetic)
+│   └── pricing_reference.json      # Unit cost reference (real market rates)
 │
 ├── elastic/
 │   ├── setup/
-│   │   ├── create_indexes.py   # Creates 6 indexes with explicit mappings
-│   │   └── index_data.py       # Bulk indexing pipeline
+│   │   ├── create_indexes.py       # Creates 6 indexes with explicit mappings
+│   │   └── index_data.py           # Bulk indexing pipeline
 │   ├── tools/
-│   │   ├── usage-anomaly.json       # ES|QL: drug over-procurement
-│   │   ├── runtime-anomaly.json     # ES|QL: idle machine detection
-│   │   ├── energy-anomaly.json      # ES|QL: building energy waste
-│   │   └── value-calculator.json    # ES|QL: pricing lookup
+│   │   ├── usage-anomaly.json      # ES|QL: drug over-procurement detection
+│   │   ├── runtime-anomaly.json    # ES|QL: idle machine detection
+│   │   ├── energy-anomaly.json     # ES|QL: building energy waste
+│   │   └── value-calculator.json   # ES|QL: pricing reference lookup
 │   ├── agents/
-│   │   ├── cartographer.json
-│   │   ├── pattern-seeker.json
-│   │   ├── valuator.json
-│   │   └── action-taker.json
+│   │   ├── cartographer.json       # Agent 1: index mapping
+│   │   ├── pattern-seeker.json     # Agent 2: anomaly detection
+│   │   ├── valuator.json           # Agent 3: dollar valuation
+│   │   └── action-taker.json       # Agent 4: verification + workflow
 │   └── workflows/
-│       └── action_workflow.yaml     # Elastic Workflow: Slack + audit record
+│       └── action_workflow.yaml    # Elastic Workflow: Slack + audit
 │
 ├── orchestrator/
-│   ├── main.py                 # 4-agent pipeline (direct ES|QL execution)
-│   ├── elastic_client.py       # Elasticsearch client factory
-│   ├── agent_caller.py         # Agent Builder API wrapper
-│   └── value_formatter.py      # Currency formatting helpers
+│   ├── main.py                     # 4-agent pipeline orchestrator
+│   ├── elastic_client.py           # Elasticsearch client factory
+│   ├── agent_caller.py             # Agent Builder API wrapper
+│   └── value_formatter.py          # Currency formatting helpers
+│
+├── tests/
+│   ├── test_value_formatter.py     # Unit tests for formatting
+│   └── test_pipeline_logic.py      # Tests for scoring and priority
 │
 ├── frontend/
-│   └── index.html              # Animated demo UI (calls /api/run for live data)
+│   └── index.html                  # Animated demo UI (live API + fallback)
 │
 └── dashboard/
-    └── kibana_dashboard.json   # Kibana dashboard export
+    └── kibana_dashboard.json       # Kibana dashboard specification
 ```
-
----
-
-## Indexes
-
-| Index | Domain | Records |
-|---|---|---|
-| `factory-iot-data` | Manufacturing IoT sensor readings | ~8,100 |
-| `hospital-drugs` | Drug procurement vs consumption | ~8,640 |
-| `nyc-buildings` | Building occupancy + energy usage | ~1,095 |
-| `pricing-reference` | Unit cost lookup table | 5 |
-| `known-exceptions` | Approved exception registry | 0 |
-| `ghost-economy-audit` | Pipeline output / audit trail | grows per run |
 
 ---
 
 ## ES|QL Queries
 
-All anomaly detection uses pure ES|QL. Example:
+All anomaly detection uses pure ES|QL. Example (drug over-procurement):
 
 ```sql
 FROM hospital-drugs
@@ -163,25 +221,38 @@ FROM hospital-drugs
 ## API Endpoints
 
 | Method | Path | Description |
-|---|---|---|
-| `GET` | `/` | Serves the frontend HTML |
-| `POST` | `/api/run` | Runs the full 4-agent pipeline, returns JSON results |
+|--------|------|-------------|
+| `GET` | `/` | Serves the frontend |
+| `POST` | `/api/run` | Runs the full 4-agent pipeline, returns JSON |
 | `GET` | `/api/health` | Health check |
+
+---
+
+## What We Liked
+
+1. **ES|QL tool system** -- Parameterized queries that agents call precisely. No prompt injection risk, deterministic results, testable in Kibana Dev Tools before deployment.
+2. **Agent Builder's tool orchestration** -- Defining tools as ES|QL queries and assigning them to agents creates a clean separation between reasoning (agent) and execution (tool).
+
+## Challenges
+
+- Cross-correlating time-series data across indexes with different timestamp granularities (daily factory data vs per-order hospital data vs annual building data)
+- ES|QL integer division silently truncates -- discovered that `10048 / 24891 = 0` in ES|QL and had to use `TO_DOUBLE()` casts
 
 ---
 
 ## Tech Stack
 
-- **Python 3.11+** — orchestration, data generation
-- **elasticsearch-py 8.x** — Elasticsearch client
-- **ES|QL** — all anomaly detection queries
-- **Elastic Agent Builder** — 4 agents + 4 tools in Kibana
-- **Elastic Workflows** — Slack alert + audit record automation
-- **FastAPI + uvicorn** — lightweight API server
-- **requests, numpy, faker** — HTTP, data generation
+- **Python 3.11+** -- orchestration, data generation
+- **elasticsearch-py 8.x** -- Elasticsearch client
+- **ES|QL** -- all anomaly detection queries
+- **Elastic Agent Builder** -- 4 agents + 4 tools in Kibana
+- **Elastic Workflows** -- Slack alert + audit record automation
+- **FastAPI + uvicorn** -- lightweight API server
+- **NYC Open Data API** -- real building energy benchmarking data
+- **pytest** -- test suite
 
 ---
 
 ## License
 
-MIT — see [LICENSE](LICENSE)
+MIT -- see [LICENSE](LICENSE)
