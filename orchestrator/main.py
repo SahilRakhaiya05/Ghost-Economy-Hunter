@@ -518,6 +518,89 @@ def _run_generic_anomaly_scan(
     return anomalies, ano_id
 
 
+def _load_custom_rules() -> List[Dict[str, Any]]:
+    """Load custom waste detection rules from data/custom_rules.json.
+
+    Returns:
+        List of rule dicts, or empty list if no rules file exists.
+    """
+    rules_path = Path(__file__).resolve().parent.parent / "data" / "custom_rules.json"
+    if not rules_path.exists():
+        return []
+    try:
+        import json as _json
+        with open(rules_path, encoding="utf-8") as f:
+            return _json.load(f)
+    except (json.JSONDecodeError, OSError) as exc:
+        log.warning("Failed to load custom rules: %s", exc)
+        return []
+
+
+def _run_custom_rule_scan(
+    rule: Dict[str, Any],
+    ano_id_start: int,
+) -> tuple:
+    """Run a user-defined waste detection rule as an ES|QL query.
+
+    Args:
+        rule: Custom rule dict with index_name, field_a, field_b, group_by, threshold.
+        ano_id_start: Starting anomaly ID counter.
+
+    Returns:
+        Tuple of (anomalies list, next ano_id).
+    """
+    idx = rule["index_name"]
+    fa = rule["field_a"]
+    fb = rule["field_b"]
+    gb = rule.get("group_by")
+    threshold = rule.get("threshold", 0.20)
+    ano_id = ano_id_start
+    anomalies: List[Dict[str, Any]] = []
+
+    by_clause = f" BY {gb}" if gb else ""
+    query = (
+        f"FROM {idx} "
+        f"| STATS total_a = SUM({fa}), total_b = SUM({fb}){by_clause} "
+        f"| EVAL delta = total_a - total_b, "
+        f"  ratio = TO_DOUBLE(total_a - total_b) / TO_DOUBLE(total_a) "
+        f"| WHERE ratio > {threshold} "
+        f"| SORT ratio DESC "
+        f"| LIMIT 20"
+    )
+
+    _add_reasoning("Pattern Seeker",
+                   f"Running custom rule: {fa} vs {fb} on {idx} (threshold={threshold:.0%})",
+                   tool="custom.rule", query=query)
+    try:
+        rows = _esql(query)
+        for row in rows:
+            ano_id += 1
+            entity_val = str(row.get(gb, idx)) if gb else idx
+            anomalies.append({
+                "id": f"ANO-{ano_id:03d}",
+                "type": "GENERIC_MISMATCH",
+                "entity": f"{entity_val} — {idx}",
+                "index": idx,
+                "delta_quantity": int(row.get("delta", 0)),
+                "unit": "units",
+                "time_period_days": 90,
+                "confidence_score": round(min(0.95, float(row.get("ratio", 0)) + 0.5), 2),
+                "tool_used": "custom.rule",
+                "raw_data_summary": (
+                    f"{fa}={row.get('total_a', 0)} {fb}={row.get('total_b', 0)} "
+                    f"delta={row.get('delta', 0)} ratio={row.get('ratio', 0):.3f}"
+                ),
+            })
+        _add_reasoning("Pattern Seeker",
+                       f"Custom rule found {len(rows)} anomalies in {idx}",
+                       tool="custom.rule",
+                       result_summary=f"{len(rows)} matches for {fa} vs {fb}")
+    except ApiError as exc:
+        _add_reasoning("Pattern Seeker", f"Custom rule query failed for {idx}: {exc}")
+
+    return anomalies, ano_id
+
+
 # ── Agent 2: Pattern Seeker ───────────────────────────────────────────────────
 
 def run_pattern_seeker(
@@ -736,8 +819,26 @@ def run_pattern_seeker(
     else:
         custom_indexes = []
 
+    custom_rules = _load_custom_rules()
+    rule_indexes_handled: set = set()
+
+    for rule in custom_rules:
+        rule_idx = rule.get("index_name", "")
+        if target_indexes and rule_idx not in target_indexes:
+            continue
+        if not _scan_all and rule_idx not in _targets:
+            continue
+        _add_reasoning("Pattern Seeker",
+                       f"Running custom rule for {rule_idx}: {rule.get('field_a')} vs {rule.get('field_b')}")
+        rule_anomalies, ano_id = _run_custom_rule_scan(rule, ano_id)
+        anomalies.extend(rule_anomalies)
+        generic_count += len(rule_anomalies)
+        rule_indexes_handled.add(rule_idx)
+
     generic_parts: List[str] = []
     for custom_idx in custom_indexes:
+        if custom_idx in rule_indexes_handled:
+            continue
         dc = doc_counts.get(custom_idx, 0)
         _add_reasoning("Pattern Seeker",
                        f"Running generic anomaly scan on: {custom_idx} ({dc:,} docs)")
@@ -804,6 +905,8 @@ def run_valuator(patterns: Dict[str, Any]) -> Dict[str, Any]:
     _add_reasoning("Valuator", f"Loaded {len(pricing)} pricing items",
                    result_summary=", ".join(pricing.keys()))
 
+    custom_pricing = {row["item_key"]: row.get("unit_cost_usd", 1.0) for row in pricing_rows}
+
     unit_cost_map = {
         "USAGE_ORDER_MISMATCH": pricing.get("insulin", {}).get("unit_cost_usd", 212.50),
         "RUNTIME_SCHEDULE_GAP": pricing.get("press-machine-hour", {}).get("unit_cost_usd", 112.50),
@@ -821,12 +924,29 @@ def run_valuator(patterns: Dict[str, Any]) -> Dict[str, Any]:
         "GENERIC_WASTE_COST": "Product Waste Loss",
     }
 
+    custom_rules = _load_custom_rules()
+
     valued_findings = []
     for ano in patterns.get("anomalies", []):
         atype = ano["type"]
         unit_cost = unit_cost_map.get(atype, 1.0)
         if unit_cost is None:
             unit_cost = ano.get("unit_cost_detected", 1.0)
+
+        if atype.startswith("GENERIC_"):
+            ano_index = ano.get("index", "")
+            rule_match = [r for r in custom_rules if r.get("index_name") == ano_index]
+            if rule_match and rule_match[0].get("unit_cost"):
+                unit_cost = rule_match[0]["unit_cost"]
+                _add_reasoning("Valuator",
+                               f"Using custom rule unit cost ${unit_cost:.2f} for {ano_index}")
+            elif ano_index in custom_pricing:
+                unit_cost = custom_pricing[ano_index]
+            else:
+                for ck, cv in custom_pricing.items():
+                    if ck in ano_index or ano_index in ck:
+                        unit_cost = cv
+                        break
         delta = ano["delta_quantity"]
         days = ano["time_period_days"]
         dollar_value = round(delta * unit_cost, 2)

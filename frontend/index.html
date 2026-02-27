@@ -523,6 +523,108 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
     <button class="btn btn-secondary btn-sm" style="margin-top:10px" onclick="generateData()">Generate Sample Data</button>
     <span id="genResult" style="font-size:0.72rem;margin-left:8px"></span>
   </div>
+
+  <!-- Custom Pricing -->
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div>
+        <div class="card-title">Custom Pricing</div>
+        <div class="card-subtitle">Add your own unit costs so the Valuator calculates real dollar impact for your data</div>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="loadPricing()">Refresh</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div>
+        <h4 style="font-size:0.78rem;font-weight:700;margin-bottom:8px">Add Pricing Entry</h4>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div>
+            <label style="font-size:0.68rem;color:var(--text-dim)">Item Key</label>
+            <input type="text" id="priceKey" placeholder="e.g. forklift-hour" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);font-size:0.75rem;margin-top:2px">
+          </div>
+          <div>
+            <label style="font-size:0.68rem;color:var(--text-dim)">Item Name</label>
+            <input type="text" id="priceName" placeholder="e.g. Forklift Idle Hour" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);font-size:0.75rem;margin-top:2px">
+          </div>
+          <div>
+            <label style="font-size:0.68rem;color:var(--text-dim)">Unit Cost ($)</label>
+            <input type="number" step="0.01" id="priceCost" placeholder="45.00" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);font-size:0.75rem;margin-top:2px">
+          </div>
+          <div>
+            <label style="font-size:0.68rem;color:var(--text-dim)">Unit Label</label>
+            <input type="text" id="priceUnit" placeholder="e.g. hours, units, kwh" value="units" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);font-size:0.75rem;margin-top:2px">
+          </div>
+        </div>
+        <div style="margin-top:6px">
+          <label style="font-size:0.68rem;color:var(--text-dim)">Source (optional)</label>
+          <input type="text" id="priceSource" placeholder="e.g. Internal procurement system" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);font-size:0.75rem;margin-top:2px">
+        </div>
+        <button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="addPricing()">Add Pricing</button>
+        <span id="priceResult" style="font-size:0.72rem;margin-left:8px"></span>
+      </div>
+      <div>
+        <h4 style="font-size:0.78rem;font-weight:700;margin-bottom:8px">Current Pricing Table</h4>
+        <div id="pricingList" style="font-size:0.72rem;max-height:220px;overflow-y:auto">Loading...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Waste Rules -->
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div>
+        <div class="card-title">Custom Waste Rules</div>
+        <div class="card-subtitle">Define what fields to compare and what threshold counts as waste for your data</div>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="loadRules()">Refresh</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div>
+        <h4 style="font-size:0.78rem;font-weight:700;margin-bottom:8px">Add Waste Rule</h4>
+        <div style="margin-bottom:6px">
+          <label style="font-size:0.68rem;color:var(--text-dim)">Target Index</label>
+          <select id="ruleIndex" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);font-size:0.75rem;margin-top:2px">
+            <option value="">Select an index...</option>
+          </select>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div>
+            <label style="font-size:0.68rem;color:var(--text-dim)">Field A (input/ordered)</label>
+            <select id="ruleFieldA" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);font-size:0.75rem;margin-top:2px">
+              <option value="">Pick index first</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:0.68rem;color:var(--text-dim)">Field B (output/used)</label>
+            <select id="ruleFieldB" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);font-size:0.75rem;margin-top:2px">
+              <option value="">Pick index first</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:0.68rem;color:var(--text-dim)">Group By (category field)</label>
+            <select id="ruleGroupBy" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);font-size:0.75rem;margin-top:2px">
+              <option value="">None</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:0.68rem;color:var(--text-dim)">Waste Threshold (%)</label>
+            <input type="number" step="1" id="ruleThreshold" value="20" min="1" max="99" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);font-size:0.75rem;margin-top:2px">
+          </div>
+        </div>
+        <div style="margin-top:6px">
+          <label style="font-size:0.68rem;color:var(--text-dim)">Unit Cost ($ per unit, optional)</label>
+          <input type="number" step="0.01" id="ruleUnitCost" placeholder="Leave blank to use pricing table" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);font-size:0.75rem;margin-top:2px">
+        </div>
+        <button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="addRule()">Save Rule</button>
+        <span id="ruleResult" style="font-size:0.72rem;margin-left:8px"></span>
+      </div>
+      <div>
+        <h4 style="font-size:0.78rem;font-weight:700;margin-bottom:8px">Active Rules</h4>
+        <div id="rulesList" style="font-size:0.72rem;max-height:220px;overflow-y:auto">
+          <span style="color:var(--text-dim)">No custom rules defined. The generic scanner will auto-detect waste patterns.</span>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- ═══════════════ HISTORY ═══════════════ -->
@@ -1006,6 +1108,92 @@ function generateData(){
   }).catch(function(e){$('genResult').innerHTML='<span style="color:var(--rose)">'+esc(e.message)+'</span>'});
 }
 loadIndexes();
+
+/* ── Custom Pricing ── */
+function loadPricing(){
+  fetch('/api/pricing').then(function(r){return r.json()}).then(function(d){
+    var items=d.pricing||[];
+    if(!items.length){$('pricingList').innerHTML='<span style="color:var(--text-dim)">No pricing entries. Add your first one.</span>';return}
+    var html='<table style="width:100%;border-collapse:collapse;font-size:0.7rem"><thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:4px 6px">Key</th><th style="text-align:left;padding:4px 6px">Name</th><th style="text-align:right;padding:4px 6px">Cost</th><th style="text-align:left;padding:4px 6px">Unit</th><th style="text-align:left;padding:4px 6px">Source</th></tr></thead><tbody>';
+    items.forEach(function(p){
+      var isCustom=p.source&&p.source.indexOf('Custom')===0;
+      html+='<tr style="border-bottom:1px solid var(--border)"><td style="padding:4px 6px;font-family:var(--font-mono)">'+esc(p.item_key||'')+'</td><td style="padding:4px 6px">'+esc(p.item_name||'')+'</td><td style="padding:4px 6px;text-align:right;font-weight:700">$'+Number(p.unit_cost_usd||0).toFixed(2)+'</td><td style="padding:4px 6px">'+esc(p.unit_label||'')+'</td><td style="padding:4px 6px;font-size:0.62rem;color:var(--text-dim)">'+esc(p.source||'')+(isCustom?' <span style="color:var(--primary);cursor:pointer" onclick="deletePricing(\''+esc(p.item_key)+'\')">delete</span>':'')+'</td></tr>';
+    });
+    html+='</tbody></table>';
+    $('pricingList').innerHTML=html;
+  }).catch(function(){$('pricingList').innerHTML='<span style="color:var(--text-dim)">Could not load pricing</span>'});
+}
+function addPricing(){
+  var key=$('priceKey').value.trim();var name=$('priceName').value.trim();
+  var cost=$('priceCost').value;var unit=$('priceUnit').value.trim();var source=$('priceSource').value.trim();
+  if(!key||!name||!cost){$('priceResult').innerHTML='<span style="color:var(--rose)">Fill in key, name, and cost</span>';return}
+  $('priceResult').innerHTML='<span class="loading"></span>';
+  fetch('/api/pricing',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({item_key:key,item_name:name,unit_cost_usd:parseFloat(cost),unit_label:unit||'units',source:source||'Custom user-defined pricing'})}).then(function(r){return r.json()}).then(function(d){
+    if(d.error){$('priceResult').innerHTML='<span style="color:var(--rose)">'+esc(d.error)+'</span>';return}
+    $('priceResult').innerHTML='<span style="color:var(--emerald)">'+esc(d.message)+'</span>';
+    $('priceKey').value='';$('priceName').value='';$('priceCost').value='';$('priceSource').value='';
+    loadPricing();
+  }).catch(function(e){$('priceResult').innerHTML='<span style="color:var(--rose)">'+esc(e.message)+'</span>'});
+}
+function deletePricing(key){
+  fetch('/api/pricing/'+encodeURIComponent(key),{method:'DELETE'}).then(function(r){return r.json()}).then(function(){loadPricing()}).catch(function(){});
+}
+loadPricing();
+
+/* ── Custom Waste Rules ── */
+$('ruleIndex').addEventListener('change',function(){
+  var idx=this.value;if(!idx){$('ruleFieldA').innerHTML='<option value="">Pick index first</option>';$('ruleFieldB').innerHTML='<option value="">Pick index first</option>';$('ruleGroupBy').innerHTML='<option value="">None</option>';return}
+  fetch('/api/connect',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({index_name:idx})}).then(function(r){return r.json()}).then(function(d){
+    if(d.error)return;
+    var numOpts='<option value="">Select field</option>';
+    (d.numeric_fields||[]).forEach(function(f){numOpts+='<option value="'+esc(f)+'">'+esc(f)+'</option>'});
+    $('ruleFieldA').innerHTML=numOpts;
+    $('ruleFieldB').innerHTML=numOpts;
+    var kwOpts='<option value="">None (aggregate all)</option>';
+    (d.keyword_fields||[]).forEach(function(f){kwOpts+='<option value="'+esc(f)+'">'+esc(f)+'</option>'});
+    $('ruleGroupBy').innerHTML=kwOpts;
+  });
+});
+function populateRuleIndexes(){
+  fetch('/api/indexes').then(function(r){return r.json()}).then(function(d){
+    var sel=$('ruleIndex');var html='<option value="">Select an index...</option>';
+    (d.indexes||[]).forEach(function(i){if(!i.name.startsWith('.')&&i.name!=='pricing-reference'&&i.name!=='known-exceptions'&&i.name!=='ghost-economy-audit')html+='<option value="'+esc(i.name)+'">'+esc(i.name)+' ('+fmtN(i.doc_count)+' docs)</option>'});
+    sel.innerHTML=html;
+  });
+}
+populateRuleIndexes();
+function addRule(){
+  var idx=$('ruleIndex').value;var fa=$('ruleFieldA').value;var fb=$('ruleFieldB').value;
+  var gb=$('ruleGroupBy').value;var th=$('ruleThreshold').value;var uc=$('ruleUnitCost').value;
+  if(!idx||!fa||!fb){$('ruleResult').innerHTML='<span style="color:var(--rose)">Select index, field A, and field B</span>';return}
+  $('ruleResult').innerHTML='<span class="loading"></span>';
+  fetch('/api/rules',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({index_name:idx,field_a:fa,field_b:fb,group_by:gb,threshold:(parseFloat(th)||20)/100,unit_cost:uc?parseFloat(uc):null})}).then(function(r){return r.json()}).then(function(d){
+    if(d.error){$('ruleResult').innerHTML='<span style="color:var(--rose)">'+esc(d.error)+'</span>';return}
+    $('ruleResult').innerHTML='<span style="color:var(--emerald)">'+esc(d.message)+'</span>';
+    loadRules();
+  }).catch(function(e){$('ruleResult').innerHTML='<span style="color:var(--rose)">'+esc(e.message)+'</span>'});
+}
+function loadRules(){
+  fetch('/api/rules').then(function(r){return r.json()}).then(function(d){
+    var rules=d.rules||[];
+    if(!rules.length){$('rulesList').innerHTML='<span style="color:var(--text-dim)">No custom rules. The generic scanner will auto-detect waste patterns.</span>';return}
+    var html='';
+    rules.forEach(function(r){
+      html+='<div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;margin-bottom:6px">'
+        +'<div style="display:flex;justify-content:space-between;align-items:center"><strong style="font-size:0.75rem">'+esc(r.index_name)+'</strong><span style="color:var(--rose);cursor:pointer;font-size:0.65rem" onclick="deleteRule(\''+esc(r.index_name)+'\',\''+esc(r.rule_name)+'\')">delete</span></div>'
+        +'<div style="font-size:0.68rem;color:var(--text-dim);margin-top:4px">Compare <span style="color:var(--primary);font-family:var(--font-mono)">'+esc(r.field_a)+'</span> vs <span style="color:var(--primary);font-family:var(--font-mono)">'+esc(r.field_b)+'</span>'
+        +(r.group_by?' grouped by <span style="color:var(--purple);font-family:var(--font-mono)">'+esc(r.group_by)+'</span>':'')
+        +' &middot; threshold: '+(r.threshold*100).toFixed(0)+'%'
+        +(r.unit_cost?' &middot; $'+r.unit_cost.toFixed(2)+'/unit':'')
+        +'</div></div>';
+    });
+    $('rulesList').innerHTML=html;
+  }).catch(function(){});
+}
+function deleteRule(idx,name){
+  fetch('/api/rules/'+encodeURIComponent(idx)+'/'+encodeURIComponent(name),{method:'DELETE'}).then(function(){loadRules()}).catch(function(){});
+}
+loadRules();
 
 /* ── Architecture: live indexes ── */
 fetch('/api/indexes').then(function(r){return r.json()}).then(function(d){

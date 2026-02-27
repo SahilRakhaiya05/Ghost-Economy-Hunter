@@ -128,7 +128,9 @@ sequenceDiagram
 |---------|-------------|
 | **Universal Data Ingestion** | Upload any CSV, connect any existing index, or use built-in sample datasets. No schema required — fields are auto-detected. |
 | **Smart Anomaly Detection** | Specialized ES\|QL tools for known domains (healthcare, manufacturing, energy) + a generic scanner that auto-adapts to any dataset. |
-| **Real Dollar Impact** | Every anomaly gets a dollar value from a pricing reference index. Annualized projections. Priority scoring (CRITICAL/HIGH/MEDIUM/LOW). |
+| **Custom Pricing** | Add your own unit costs (e.g. $45/forklift-hour) via the UI. The Valuator uses these to calculate real dollar impact for your custom data. |
+| **Custom Waste Rules** | Define exactly which fields to compare (e.g. `units_received` vs `units_sold`), set your own threshold, and assign a unit cost — all from the UI. |
+| **Real Dollar Impact** | Every anomaly gets a dollar value from a pricing reference index (built-in + custom). Annualized projections. Priority scoring (CRITICAL/HIGH/MEDIUM/LOW). |
 | **Live Agent Reasoning** | Watch agents think in real-time via Server-Sent Events. See every tool selection, ES\|QL query, and intermediate result as it happens. |
 | **Automated Actions** | Findings above confidence threshold trigger Slack alerts and Elastic Workflows. Low-confidence findings are suppressed to prevent noise. |
 | **Full Audit Trail** | Every finding is indexed into `ghost-economy-audit` with complete provenance: which agent found it, which query, what data, what dollar value. |
@@ -309,6 +311,10 @@ The frontend is a single-file HTML dashboard with 7 tabs:
 | `/api/run/stream` | GET | SSE stream — run pipeline with live agent reasoning |
 | `/api/converse` | POST | Direct chat with any Agent Builder agent |
 | `/api/chat` | POST | Natural language queries (ES\|QL or agent fallback) |
+| `/api/pricing` | GET | List all pricing entries (built-in + custom) |
+| `/api/pricing` | POST | Add a custom pricing entry |
+| `/api/rules` | GET | List custom waste detection rules |
+| `/api/rules` | POST | Create a custom waste rule (fields, threshold, cost) |
 | `/api/scan-targets` | GET | Available data sources with doc counts |
 | `/api/indexes` | GET | All Elasticsearch indexes |
 | `/api/upload` | POST | Upload CSV, auto-create index |

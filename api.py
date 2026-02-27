@@ -544,6 +544,190 @@ async def connect_index(body: Dict[str, Any]) -> JSONResponse:
         return JSONResponse(status_code=500, content={"error": str(exc)})
 
 
+# ── Custom Pricing ─────────────────────────────────────────────────────────────
+
+@app.get("/api/pricing")
+async def list_pricing() -> JSONResponse:
+    """List all entries in the pricing-reference index.
+
+    Returns:
+        JSON list of pricing items with item_key, unit_cost_usd, etc.
+    """
+    try:
+        es = _es()
+        query = "FROM pricing-reference | KEEP item_key, item_name, unit_cost_usd, unit_label, source | LIMIT 100"
+        result = es.esql.query(query=query)
+        cols = [c["name"] for c in result["columns"]]
+        rows = [dict(zip(cols, row)) for row in result["values"]]
+        return JSONResponse(content={"pricing": rows})
+    except (ApiError, ESConnectionError) as exc:
+        log.error("Failed to list pricing: %s", exc)
+        return JSONResponse(content={"pricing": [], "error": str(exc)})
+
+
+@app.post("/api/pricing")
+async def add_pricing(body: Dict[str, Any]) -> JSONResponse:
+    """Add a custom pricing entry to the pricing-reference index.
+
+    Args:
+        body: JSON with item_key, item_name, unit_cost_usd, unit_label, source (optional).
+
+    Returns:
+        JSON confirming the indexed pricing entry.
+    """
+    item_key = body.get("item_key", "").strip().lower().replace(" ", "-")
+    item_name = body.get("item_name", "").strip()
+    unit_cost = body.get("unit_cost_usd")
+    unit_label = body.get("unit_label", "units").strip()
+    source = body.get("source", "Custom user-defined pricing").strip()
+
+    if not item_key:
+        return JSONResponse(status_code=400, content={"error": "item_key is required"})
+    if not item_name:
+        return JSONResponse(status_code=400, content={"error": "item_name is required"})
+    if unit_cost is None:
+        return JSONResponse(status_code=400, content={"error": "unit_cost_usd is required"})
+    try:
+        unit_cost = float(unit_cost)
+    except (ValueError, TypeError):
+        return JSONResponse(status_code=400, content={"error": "unit_cost_usd must be a number"})
+
+    try:
+        es = _es()
+        doc = {
+            "item_key": item_key,
+            "item_name": item_name,
+            "unit_cost_usd": unit_cost,
+            "unit_label": unit_label,
+            "source": source,
+            "effective_date": datetime.utcnow().strftime("%Y-%m-%d"),
+        }
+        es.index(index="pricing-reference", document=doc, id=f"custom-{item_key}")
+        log.info("Added custom pricing: %s = $%.4f/%s", item_key, unit_cost, unit_label)
+        return JSONResponse(content={"message": f"Pricing added: {item_name} at ${unit_cost}/{unit_label}", "pricing": doc})
+    except ApiError as exc:
+        log.error("Failed to add pricing: %s", exc)
+        return JSONResponse(status_code=500, content={"error": str(exc)})
+
+
+@app.delete("/api/pricing/{item_key}")
+async def delete_pricing(item_key: str) -> JSONResponse:
+    """Delete a custom pricing entry.
+
+    Args:
+        item_key: The item_key to remove.
+
+    Returns:
+        JSON confirming deletion.
+    """
+    try:
+        es = _es()
+        es.delete(index="pricing-reference", id=f"custom-{item_key}")
+        return JSONResponse(content={"message": f"Deleted pricing for {item_key}"})
+    except ApiError as exc:
+        return JSONResponse(status_code=404, content={"error": f"Pricing entry not found: {exc}"})
+
+
+# ── Custom Waste Rules ────────────────────────────────────────────────────────
+
+@app.post("/api/rules")
+async def add_waste_rule(body: Dict[str, Any]) -> JSONResponse:
+    """Save a custom waste detection rule for a specific index.
+
+    Rules define which fields to compare (field_a vs field_b), the grouping
+    field, the waste threshold, and an optional custom unit cost.
+
+    Args:
+        body: JSON with index_name, field_a, field_b, group_by, threshold, unit_cost.
+
+    Returns:
+        JSON confirming the stored rule.
+    """
+    idx = body.get("index_name", "").strip()
+    field_a = body.get("field_a", "").strip()
+    field_b = body.get("field_b", "").strip()
+    group_by = body.get("group_by", "").strip()
+    threshold = body.get("threshold", 0.20)
+    unit_cost = body.get("unit_cost")
+    rule_name = body.get("rule_name", "").strip() or f"{field_a}-vs-{field_b}"
+
+    if not idx:
+        return JSONResponse(status_code=400, content={"error": "index_name is required"})
+    if not field_a or not field_b:
+        return JSONResponse(status_code=400, content={"error": "field_a and field_b are required"})
+
+    try:
+        threshold = float(threshold)
+    except (ValueError, TypeError):
+        threshold = 0.20
+
+    rule = {
+        "index_name": idx,
+        "rule_name": rule_name,
+        "field_a": field_a,
+        "field_b": field_b,
+        "group_by": group_by or None,
+        "threshold": threshold,
+        "unit_cost": float(unit_cost) if unit_cost else None,
+        "created_at": datetime.utcnow().isoformat() + "Z",
+    }
+
+    rules_file = Path(__file__).parent / "data" / "custom_rules.json"
+    existing: List[Dict] = []
+    if rules_file.exists():
+        with open(rules_file, encoding="utf-8") as f:
+            existing = json.load(f)
+
+    existing = [r for r in existing if not (r["index_name"] == idx and r["rule_name"] == rule_name)]
+    existing.append(rule)
+
+    with open(rules_file, "w", encoding="utf-8") as f:
+        json.dump(existing, f, indent=2)
+
+    log.info("Saved custom rule: %s for %s (threshold=%.2f)", rule_name, idx, threshold)
+    return JSONResponse(content={"message": f"Rule saved: {rule_name}", "rule": rule})
+
+
+@app.get("/api/rules")
+async def list_rules() -> JSONResponse:
+    """List all custom waste detection rules.
+
+    Returns:
+        JSON list of stored rules.
+    """
+    rules_file = Path(__file__).parent / "data" / "custom_rules.json"
+    if not rules_file.exists():
+        return JSONResponse(content={"rules": []})
+    with open(rules_file, encoding="utf-8") as f:
+        rules = json.load(f)
+    return JSONResponse(content={"rules": rules})
+
+
+@app.delete("/api/rules/{index_name}/{rule_name}")
+async def delete_rule(index_name: str, rule_name: str) -> JSONResponse:
+    """Delete a custom waste detection rule.
+
+    Args:
+        index_name: Target index.
+        rule_name: Rule name to delete.
+
+    Returns:
+        JSON confirming deletion.
+    """
+    rules_file = Path(__file__).parent / "data" / "custom_rules.json"
+    if not rules_file.exists():
+        return JSONResponse(status_code=404, content={"error": "No rules file"})
+    with open(rules_file, encoding="utf-8") as f:
+        rules = json.load(f)
+    before = len(rules)
+    rules = [r for r in rules if not (r["index_name"] == index_name and r["rule_name"] == rule_name)]
+    if len(rules) == before:
+        return JSONResponse(status_code=404, content={"error": "Rule not found"})
+    with open(rules_file, "w", encoding="utf-8") as f:
+        json.dump(rules, f, indent=2)
+    return JSONResponse(content={"message": f"Deleted rule {rule_name} for {index_name}"})
+
+
 # ── Sector endpoints ──────────────────────────────────────────────────────────
 
 @app.get("/api/sectors")
