@@ -8,16 +8,34 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-  background: #0f172a;
+  background: #0a0e1a;
   color: #e2e8f0;
   min-height: 100vh;
-  padding: 40px 20px;
+  padding: 0;
+  overflow-x: hidden;
 }
-.container { max-width: 960px; margin: 0 auto; }
+.hero-bg {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background:
+    radial-gradient(ellipse 800px 400px at 20% 20%, rgba(59,130,246,0.08) 0%, transparent 70%),
+    radial-gradient(ellipse 600px 400px at 80% 80%, rgba(139,92,246,0.06) 0%, transparent 70%),
+    #0a0e1a;
+  z-index: -1;
+}
+.container { max-width: 960px; margin: 0 auto; padding: 40px 20px; position: relative; }
 
 /* Header */
 .header { margin-bottom: 48px; }
-h1 { font-size: 38px; color: #38bdf8; margin-bottom: 6px; letter-spacing: -0.5px; }
+h1 {
+  font-size: 42px;
+  background: linear-gradient(135deg, #38bdf8, #818cf8, #c084fc);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 6px;
+  letter-spacing: -0.5px;
+  font-weight: 800;
+}
 .subtitle { color: #94a3b8; font-size: 16px; max-width: 640px; line-height: 1.5; }
 .mode-badge {
   display: inline-block;
@@ -32,24 +50,39 @@ h1 { font-size: 38px; color: #38bdf8; margin-bottom: 6px; letter-spacing: -0.5px
 .mode-demo  { background: #1e3a5f; color: #93c5fd; border: 1px solid #1d4ed8; }
 
 /* Tabs */
-.tabs { display: flex; gap: 0; margin-bottom: 32px; border-bottom: 1px solid #1e293b; }
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 32px;
+  background: rgba(15,23,42,0.6);
+  border-radius: 12px;
+  padding: 4px;
+  backdrop-filter: blur(6px);
+  border: 1px solid #1e293b;
+}
 .tab {
-  padding: 12px 24px;
-  font-size: 14px;
+  padding: 10px 20px;
+  font-size: 13px;
   font-weight: 600;
   color: #64748b;
   cursor: pointer;
-  border-bottom: 2px solid transparent;
+  border-radius: 8px;
   transition: all 0.2s;
+  text-align: center;
+  flex: 1;
 }
-.tab:hover { color: #94a3b8; }
-.tab.active { color: #38bdf8; border-bottom-color: #38bdf8; }
+.tab:hover { color: #94a3b8; background: rgba(30,41,59,0.5); }
+.tab.active {
+  color: #e2e8f0;
+  background: rgba(37,99,235,0.15);
+  box-shadow: 0 0 12px rgba(37,99,235,0.15);
+}
 .tab-content { display: none; }
-.tab-content.active { display: block; }
+.tab-content.active { display: block; animation: fadeIn 0.3s ease; }
 
 /* Button */
 .start-btn {
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
   color: white;
   border: none;
   padding: 16px 52px;
@@ -57,14 +90,26 @@ h1 { font-size: 38px; color: #38bdf8; margin-bottom: 6px; letter-spacing: -0.5px
   font-weight: 600;
   border-radius: 12px;
   cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 4px 20px rgba(37,99,235,0.4);
+  transition: all 0.3s;
+  box-shadow: 0 4px 30px rgba(37,99,235,0.35);
   margin-bottom: 48px;
+  letter-spacing: 0.3px;
+  position: relative;
+  overflow: hidden;
 }
+.start-btn::after {
+  content: '';
+  position: absolute;
+  top: -50%; left: -50%;
+  width: 200%; height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.start-btn:hover:not(:disabled)::after { opacity: 1; }
 .start-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #1d4ed8, #1e40af);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 24px rgba(37,99,235,0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 40px rgba(124,58,237,0.4);
 }
 .start-btn:disabled { background: #334155; cursor: not-allowed; box-shadow: none; transform: none; }
 
@@ -80,13 +125,73 @@ h1 { font-size: 38px; color: #38bdf8; margin-bottom: 6px; letter-spacing: -0.5px
 .counter {
   font-size: 84px;
   font-weight: 800;
-  color: #22d3ee;
+  background: linear-gradient(135deg, #22d3ee, #38bdf8, #818cf8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   line-height: 1;
   letter-spacing: -2px;
-  transition: color 0.5s;
+  transition: all 0.5s;
 }
-.counter.final { color: #4ade80; }
+.counter.final {
+  background: linear-gradient(135deg, #4ade80, #22d3ee);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
 .counter-sub { font-size: 14px; color: #64748b; margin-top: 8px; }
+
+/* Stats row */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin: 24px 0;
+  display: none;
+}
+.stat-card {
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  animation: fadeIn 0.5s ease;
+}
+.stat-card .stat-val { font-size: 28px; font-weight: 800; color: #38bdf8; }
+.stat-card .stat-label { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+.stat-card.green .stat-val { color: #4ade80; }
+.stat-card.amber .stat-val { color: #f59e0b; }
+.stat-card.purple .stat-val { color: #818cf8; }
+
+/* Progress bar */
+.pipeline-progress {
+  height: 4px;
+  background: #1e293b;
+  border-radius: 4px;
+  margin: 16px 0 32px;
+  overflow: hidden;
+  display: none;
+}
+.pipeline-progress .bar {
+  height: 100%;
+  background: linear-gradient(90deg, #2563eb, #38bdf8, #818cf8);
+  border-radius: 4px;
+  transition: width 0.6s cubic-bezier(0.16,1,0.3,1);
+  width: 0%;
+}
+
+/* Sector detected badge */
+.sector-badge {
+  display: inline-block;
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  background: #1a1a2e;
+  color: #818cf8;
+  border: 1px solid #4338ca;
+  margin-left: 10px;
+  animation: fadeIn 0.5s ease;
+}
 
 /* Agents */
 .agents { margin-bottom: 48px; }
@@ -97,19 +202,30 @@ h1 { font-size: 38px; color: #38bdf8; margin-bottom: 6px; letter-spacing: -0.5px
   padding: 16px 20px;
   margin: 8px 0;
   border-radius: 12px;
-  background: #1e293b;
+  background: rgba(30,41,59,0.6);
+  border: 1px solid #1e293b;
   border-left: 4px solid #334155;
   font-size: 15px;
   transition: all 0.4s;
+  backdrop-filter: blur(8px);
 }
 .step-icon { font-size: 20px; margin-right: 12px; min-width: 28px; }
 .step-text { flex: 1; }
 .step-text strong { display: block; color: #e2e8f0; font-size: 15px; }
 .step-text span { font-size: 13px; color: #64748b; }
 .step-status { font-size: 13px; color: #64748b; min-width: 140px; text-align: right; }
-.step.active { border-left-color: #38bdf8; background: #0f2944; }
+.step.active {
+  border-left-color: #38bdf8;
+  background: rgba(15,41,68,0.8);
+  border-color: rgba(56,189,248,0.2);
+  box-shadow: 0 0 20px rgba(56,189,248,0.08);
+}
 .step.active .step-status { color: #38bdf8; }
-.step.done { border-left-color: #22c55e; background: #052e16; }
+.step.done {
+  border-left-color: #22c55e;
+  background: rgba(5,46,22,0.5);
+  border-color: rgba(34,197,94,0.15);
+}
 .step.done .step-status { color: #22c55e; font-weight: 600; }
 
 /* Spinner */
@@ -130,13 +246,17 @@ h1 { font-size: 38px; color: #38bdf8; margin-bottom: 6px; letter-spacing: -0.5px
 .findings { margin-bottom: 48px; display: none; }
 .findings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
 .finding {
-  background: #1e293b;
+  background: rgba(30,41,59,0.7);
+  border: 1px solid rgba(51,65,85,0.5);
   border-radius: 12px;
   padding: 20px;
   border-left: 4px solid #f59e0b;
   animation: slideIn 0.5s cubic-bezier(0.16,1,0.3,1);
   position: relative;
+  backdrop-filter: blur(6px);
+  transition: border-color 0.3s, box-shadow 0.3s;
 }
+.finding:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
 .finding.energy { border-left-color: #818cf8; }
 .finding.factory { border-left-color: #f97316; }
 @keyframes slideIn {
@@ -148,7 +268,19 @@ h1 { font-size: 38px; color: #38bdf8; margin-bottom: 6px; letter-spacing: -0.5px
 .finding-dollar { font-size: 32px; font-weight: 800; color: #f59e0b; margin-bottom: 6px; }
 .finding.energy .finding-dollar { color: #818cf8; }
 .finding.factory .finding-dollar { color: #f97316; }
-.finding-calc { font-size: 12px; color: #64748b; line-height: 1.4; margin-bottom: 12px; }
+.finding-calc { font-size: 12px; color: #64748b; line-height: 1.4; margin-bottom: 8px; }
+.finding-annualized { font-size: 11px; color: #94a3b8; margin-bottom: 12px; }
+.finding-annualized strong { color: #e2e8f0; }
+.finding-confidence {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  background: #1e293b;
+  color: #64748b;
+  border: 1px solid #334155;
+}
 .badge {
   display: inline-block;
   padding: 3px 10px;
@@ -195,30 +327,40 @@ h1 { font-size: 38px; color: #38bdf8; margin-bottom: 6px; letter-spacing: -0.5px
 
 /* Total bar */
 .total-bar {
-  background: linear-gradient(135deg, #0f2944, #052e16);
-  border: 1px solid #166534;
+  background: linear-gradient(135deg, rgba(5,46,22,0.6), rgba(15,41,68,0.6));
+  border: 1px solid rgba(22,101,52,0.4);
   border-radius: 16px;
-  padding: 28px 32px;
+  padding: 32px;
   text-align: center;
   margin-top: 16px;
   display: none;
   animation: fadeIn 0.5s ease;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 30px rgba(34,197,94,0.08);
 }
-@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
-.total-bar .big { font-size: 48px; font-weight: 800; color: #4ade80; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+.total-bar .big {
+  font-size: 52px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #4ade80, #22d3ee);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
 .total-bar .label { font-size: 14px; color: #86efac; margin-top: 6px; }
-.total-bar .sub { font-size: 13px; color: #4b5563; margin-top: 8px; }
+.total-bar .sub { font-size: 13px; color: #94a3b8; margin-top: 8px; line-height: 1.6; }
 
 /* Status bar */
 .status-bar {
   margin-top: 32px;
   padding: 16px 20px;
-  background: #052e16;
-  border: 1px solid #166534;
+  background: rgba(5,46,22,0.5);
+  border: 1px solid rgba(22,101,52,0.3);
   border-radius: 12px;
   font-size: 13px;
   color: #4ade80;
   display: none;
+  backdrop-filter: blur(6px);
 }
 .status-bar span { margin-right: 24px; }
 
@@ -386,10 +528,11 @@ h1 { font-size: 38px; color: #38bdf8; margin-bottom: 6px; letter-spacing: -0.5px
   display: flex;
   flex-direction: column;
   height: 520px;
-  background: #1e293b;
+  background: rgba(30,41,59,0.5);
   border-radius: 14px;
-  border: 1px solid #334155;
+  border: 1px solid rgba(51,65,85,0.5);
   overflow: hidden;
+  backdrop-filter: blur(8px);
 }
 .chat-messages {
   flex: 1;
@@ -543,9 +686,31 @@ h1 { font-size: 38px; color: #38bdf8; margin-bottom: 6px; letter-spacing: -0.5px
   overflow-x: auto;
   line-height: 1.5;
 }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .container { padding: 20px 12px; }
+  h1 { font-size: 28px; }
+  .counter { font-size: 48px; }
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .findings-grid { grid-template-columns: 1fr; }
+  .tabs { flex-wrap: wrap; }
+  .tab { flex: none; padding: 8px 14px; font-size: 12px; }
+  .total-bar .big { font-size: 36px; }
+  .chat-input-row input { width: 100%; }
+  .sector-grid { grid-template-columns: 1fr; }
+}
+
+/* Glow pulse for active step */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 10px rgba(56,189,248,0.1); }
+  50% { box-shadow: 0 0 25px rgba(56,189,248,0.2); }
+}
+.step.active { animation: pulse-glow 2s ease-in-out infinite; }
 </style>
 </head>
 <body>
+<div class="hero-bg"></div>
 <div class="container">
 
   <div class="header">
@@ -574,6 +739,15 @@ h1 { font-size: 38px; color: #38bdf8; margin-bottom: 6px; letter-spacing: -0.5px
       <div class="counter-label">Total Hidden Value Found</div>
       <div class="counter" id="counter">$0</div>
       <div class="counter-sub" id="counterSub">Waiting to start&hellip;</div>
+    </div>
+
+    <div class="pipeline-progress" id="pipelineProgress"><div class="bar" id="progressBar"></div></div>
+
+    <div class="stats-row" id="statsRow">
+      <div class="stat-card"><div class="stat-val" id="statIndexes">0</div><div class="stat-label">Indexes Scanned</div></div>
+      <div class="stat-card amber"><div class="stat-val" id="statAnomalies">0</div><div class="stat-label">Anomalies Found</div></div>
+      <div class="stat-card green"><div class="stat-val" id="statActions">0</div><div class="stat-label">Actions Triggered</div></div>
+      <div class="stat-card purple"><div class="stat-val" id="statTime">0s</div><div class="stat-label">Pipeline Time</div></div>
     </div>
 
     <div class="agents">
@@ -1029,13 +1203,17 @@ function addFinding(f) {
   div.className = 'finding ' + colorClass(f.category);
   var pri = (f.priority || 'MEDIUM').toLowerCase();
   var jsonStr = JSON.stringify(f, null, 2);
+  var annualHtml = f.annualized ? '<div class="finding-annualized">Annualized: <strong>$' + Math.round(f.annualized).toLocaleString() + '/yr</strong></div>' : '';
+  var confHtml = f.confidence ? '<span class="finding-confidence">' + Math.round(f.confidence * 100) + '% confidence</span>' : '';
   div.innerHTML =
     '<div class="json-toggle" onclick="this.parentNode.querySelector(\'.json-raw\').classList.toggle(\'show\')">&lt;/&gt; JSON</div>' +
     '<div class="finding-entity">' + esc(f.entity) + '</div>' +
     '<div class="finding-category">' + esc(f.category) + '</div>' +
     '<div class="finding-dollar">$' + Math.round(f.dollar).toLocaleString() + '</div>' +
     '<div class="finding-calc">' + esc(f.calc) + '</div>' +
+    annualHtml +
     '<span class="badge ' + pri + '">' + (f.priority || 'MEDIUM') + '</span>' +
+    confHtml +
     '<div class="json-raw">' + esc(jsonStr) + '</div>';
   grid.appendChild(div);
 }
@@ -1052,89 +1230,206 @@ function showError(msg) {
   box.style.display = 'block';
 }
 
-async function startHunt() {
-  huntStartTime = Date.now();
-  var btn = document.getElementById('startBtn');
-  btn.disabled = true;
-  btn.textContent = '\u23f3 Running\u2026';
-  document.getElementById('counterSub').textContent = 'Hunt in progress\u2026';
+function resetHuntUI() {
   document.getElementById('errorBox').style.display = 'none';
   document.getElementById('findingsList').innerHTML = '';
   document.getElementById('findingsSection').style.display = 'none';
   document.getElementById('totalBar').style.display = 'none';
   document.getElementById('statusBar').style.display = 'none';
+  document.getElementById('statsRow').style.display = 'none';
+  document.getElementById('pipelineProgress').style.display = 'none';
+  document.getElementById('progressBar').style.width = '0%';
   document.getElementById('counter').className = 'counter';
   document.getElementById('counter').textContent = '$0';
-  var steps = ['s1','s2','s3','s4'];
-  for (var i = 0; i < steps.length; i++) { document.getElementById(steps[i]).className = 'step'; }
-  var sts = ['st1','st2','st3','st4'];
-  for (var i = 0; i < sts.length; i++) { document.getElementById(sts[i]).textContent = 'waiting'; }
+  for (var i = 1; i <= 4; i++) {
+    document.getElementById('s' + i).className = 'step';
+    document.getElementById('st' + i).textContent = 'waiting';
+  }
+}
 
-  var pipelinePromise = null;
+function setProgress(pct) {
+  document.getElementById('pipelineProgress').style.display = 'block';
+  document.getElementById('progressBar').style.width = pct + '%';
+}
+
+function showStats(indexes, anomalies, actions, elapsed) {
+  document.getElementById('statsRow').style.display = 'grid';
+  document.getElementById('statIndexes').textContent = indexes;
+  document.getElementById('statAnomalies').textContent = anomalies;
+  document.getElementById('statActions').textContent = actions;
+  document.getElementById('statTime').textContent = elapsed + 's';
+}
+
+async function startHunt() {
+  huntStartTime = Date.now();
+  var btn = document.getElementById('startBtn');
+  btn.disabled = true;
+  btn.textContent = '\u23f3 Running pipeline\u2026';
+  document.getElementById('counterSub').textContent = 'Hunt in progress\u2026';
+  resetHuntUI();
+
   var useLive = (window.location.protocol !== 'file:');
+
   if (useLive) {
     document.getElementById('modeBadge').textContent = 'LIVE MODE \u2014 querying real Elasticsearch data';
     document.getElementById('modeBadge').className = 'mode-badge mode-live';
-    pipelinePromise = fetch(API_URL, { method: 'POST' }).then(function(r) { return r.json(); });
-  }
-
-  setStep(1, 'active', '');
-  await sleep(useLive ? 2000 : 2500);
-  setStep(1, 'done', '\u2713 indexes mapped');
-  document.getElementById('counterSub').textContent = 'Mapped 6 indexes across 3 industries';
-
-  setStep(2, 'active', '');
-  await sleep(useLive ? 3000 : 3500);
-  setStep(2, 'done', '\u2713 anomalies found');
-
-  setStep(3, 'active', '');
-  animateCounter(useLive ? 500000 : DEMO_TOTAL, 3000);
-  await sleep(3000);
-  setStep(3, 'done', '\u2713 values calculated');
-
-  setStep(4, 'active', '');
-  await sleep(useLive ? 2000 : 2000);
-  setStep(4, 'done', '\u2713 workflows triggered');
-
-  var data = null;
-  if (useLive && pipelinePromise) {
     try {
-      data = await pipelinePromise;
-      if (data.error) { throw new Error(data.error); }
+      await runStreamingPipeline(btn);
+      return;
     } catch (err) {
-      showError('Pipeline error: ' + err.message + '. Showing demo data instead.');
-      data = null;
-      useLive = false;
+      showError('Streaming failed: ' + err.message + '. Running fallback\u2026');
     }
   }
 
-  var findings = data ? data.findings : DEMO_FINDINGS;
-  var total    = data ? data.total    : DEMO_TOTAL;
-  var triggered = data ? data.actions_triggered : 3;
-  var indexCount = data ? data.index_count : 6;
-  var elapsedSec = ((Date.now() - huntStartTime) / 1000).toFixed(1);
+  await runDemoPipeline(btn);
+}
 
-  document.getElementById('st1').textContent = '\u2713 ' + indexCount + ' indexes mapped';
-  document.getElementById('st2').textContent = '\u2713 ' + findings.length + ' anomalies found';
-  document.getElementById('st4').textContent = '\u2713 ' + triggered + ' workflows triggered';
+async function runStreamingPipeline(btn) {
+  var source = new EventSource('/api/run/stream');
+  var findings = [];
+  var total = 0;
+  var annualized = 0;
+  var indexCount = 0;
+  var triggered = 0;
+  var anomalies = 0;
+  var elapsed = 0;
+  var sector = '';
+
+  return new Promise(function(resolve, reject) {
+    source.onmessage = function(event) {
+      try {
+        var d = JSON.parse(event.data);
+
+        if (d.step === 'error') {
+          source.close();
+          reject(new Error(d.error));
+          return;
+        }
+
+        if (typeof d.step === 'number') {
+          if (d.status === 'running') {
+            setStep(d.step, 'active', '');
+            setProgress(((d.step - 1) / 4) * 100);
+          }
+          if (d.status === 'done') {
+            setStep(d.step, 'done', '\u2713 ' + d.detail);
+            setProgress((d.step / 4) * 100);
+            elapsed = d.elapsed || elapsed;
+
+            if (d.step === 1) {
+              indexCount = d.detail ? parseInt(d.detail) || 0 : 0;
+              sector = d.sector || '';
+              document.getElementById('counterSub').textContent = d.detail;
+              if (sector) {
+                document.getElementById('counterSub').innerHTML +=
+                  ' <span class="sector-badge">Sector: ' + esc(sector) + '</span>';
+              }
+            }
+            if (d.step === 2) {
+              anomalies = d.anomalies || 0;
+            }
+            if (d.step === 3 && d.findings) {
+              findings = d.findings;
+              total = d.total || 0;
+              annualized = d.annualized || 0;
+              animateCounter(total, 1500);
+              document.getElementById('findingsSection').style.display = 'block';
+              for (var i = 0; i < findings.length; i++) {
+                addFinding(findings[i]);
+              }
+            }
+            if (d.step === 4) {
+              triggered = d.triggered || 0;
+            }
+          }
+        }
+
+        if (d.step === 'complete') {
+          source.close();
+          total = d.total || total;
+          annualized = d.annualized || annualized;
+          findings = d.findings || findings;
+          triggered = d.actions_triggered || triggered;
+          indexCount = d.index_count || indexCount;
+          elapsed = d.elapsed || elapsed;
+
+          animateCounter(total, 1200);
+          showStats(indexCount, d.anomalies_found || anomalies, triggered, elapsed);
+
+          document.getElementById('counterSub').textContent =
+            findings.length + ' findings across hospital, manufacturing & real estate';
+
+          document.getElementById('totalBig').textContent = '$' + Math.round(total).toLocaleString();
+          document.getElementById('totalSub').innerHTML =
+            findings.length + ' findings \u2022 ' + triggered + ' Slack alerts \u2022 ' + elapsed + 's pipeline' +
+            (annualized ? '<br>Annualized impact: <strong style="color:#4ade80;">$' + Math.round(annualized).toLocaleString() + '/yr</strong>' : '');
+          document.getElementById('totalBar').style.display = 'block';
+
+          document.getElementById('sbSlack').textContent = '\u2705 ' + triggered + ' Slack alerts sent';
+          document.getElementById('sbAudit').textContent = '\u2705 ' + findings.length + ' audit records indexed';
+          document.getElementById('sbTime').textContent = '\u23f1\ufe0f ' + elapsed + 's';
+          document.getElementById('statusBar').style.display = 'block';
+
+          btn.textContent = '\u2705 Hunt Complete \u2014 Run Again';
+          btn.disabled = false;
+          resolve();
+        }
+      } catch (e) {
+        source.close();
+        reject(e);
+      }
+    };
+    source.onerror = function() {
+      source.close();
+      reject(new Error('SSE connection lost'));
+    };
+  });
+}
+
+async function runDemoPipeline(btn) {
+  setStep(1, 'active', '');
+  setProgress(5);
+  await sleep(2500);
+  setStep(1, 'done', '\u2713 4 indexes mapped');
+  setProgress(25);
+  document.getElementById('counterSub').textContent = 'Mapped 6 indexes across 3 industries';
+
+  setStep(2, 'active', '');
+  setProgress(30);
+  await sleep(3500);
+  setStep(2, 'done', '\u2713 3 anomalies found');
+  setProgress(50);
+
+  setStep(3, 'active', '');
+  setProgress(55);
+  animateCounter(DEMO_TOTAL, 3000);
+  await sleep(3000);
+  setStep(3, 'done', '\u2713 values calculated');
+  setProgress(75);
 
   document.getElementById('findingsSection').style.display = 'block';
-  for (var i = 0; i < findings.length; i++) {
-    addFinding(findings[i]);
+  for (var i = 0; i < DEMO_FINDINGS.length; i++) {
+    addFinding(DEMO_FINDINGS[i]);
     await sleep(600);
   }
 
-  animateCounter(total, 2000);
-  document.getElementById('counterSub').textContent =
-    findings.length + ' findings across hospital, manufacturing & real estate';
+  setStep(4, 'active', '');
+  setProgress(80);
+  await sleep(2000);
+  setStep(4, 'done', '\u2713 3 workflows triggered');
+  setProgress(100);
 
-  document.getElementById('totalBig').textContent = '$' + Math.round(total).toLocaleString();
-  document.getElementById('totalSub').textContent =
-    findings.length + ' findings \u2022 ' + triggered + ' Slack alerts \u2022 ' + elapsedSec + 's pipeline time';
+  var elapsedSec = ((Date.now() - huntStartTime) / 1000).toFixed(1);
+  showStats(6, 3, 3, elapsedSec);
+  animateCounter(DEMO_TOTAL, 2000);
+  document.getElementById('counterSub').textContent = '3 findings across hospital, manufacturing & real estate';
+
+  document.getElementById('totalBig').textContent = '$' + Math.round(DEMO_TOTAL).toLocaleString();
+  document.getElementById('totalSub').textContent = '3 findings \u2022 3 Slack alerts \u2022 ' + elapsedSec + 's pipeline time';
   document.getElementById('totalBar').style.display = 'block';
 
-  document.getElementById('sbSlack').textContent = '\u2705 ' + triggered + ' Slack alerts sent';
-  document.getElementById('sbAudit').textContent = '\u2705 ' + findings.length + ' audit records indexed';
+  document.getElementById('sbSlack').textContent = '\u2705 3 Slack alerts sent';
+  document.getElementById('sbAudit').textContent = '\u2705 3 audit records indexed';
   document.getElementById('sbTime').textContent = '\u23f1\ufe0f ' + elapsedSec + 's total';
   document.getElementById('statusBar').style.display = 'block';
 

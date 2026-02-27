@@ -24,6 +24,8 @@ from typing import Any, Dict, List
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import json as _json
+
 import uvicorn
 from dotenv import load_dotenv
 from elasticsearch import Elasticsearch
@@ -31,7 +33,7 @@ from elasticsearch.exceptions import ApiError
 from elasticsearch.helpers import bulk
 from fastapi import FastAPI, File, Form, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 load_dotenv()
@@ -156,6 +158,112 @@ async def run_pipeline() -> JSONResponse:
             status_code=500,
             content={"error": str(exc), "detail": "Pipeline execution failed"},
         )
+
+
+@app.get("/api/run/stream")
+async def run_pipeline_stream():
+    """Execute the pipeline with Server-Sent Events for real-time progress.
+
+    Streams events as each agent completes so the frontend can update live.
+
+    Returns:
+        SSE stream with agent progress events.
+    """
+    import time
+
+    def event_stream():
+        """Generator yielding SSE events as agents execute."""
+        try:
+            from orchestrator.main import (
+                run_cartographer, run_pattern_seeker,
+                run_valuator, run_action_taker,
+            )
+            from orchestrator.value_formatter import format_dollar
+
+            t0 = time.time()
+
+            yield _sse({"step": 1, "agent": "Cartographer", "status": "running"})
+            index_map = run_cartographer()
+            yield _sse({
+                "step": 1, "agent": "Cartographer", "status": "done",
+                "detail": f"{len(index_map.get('indexes', []))} indexes mapped",
+                "sector": index_map.get("sector_detected", ""),
+                "elapsed": round(time.time() - t0, 1),
+            })
+
+            yield _sse({"step": 2, "agent": "Pattern Seeker", "status": "running"})
+            patterns = run_pattern_seeker(index_map)
+            n = patterns.get("total_anomalies_found", 0)
+            yield _sse({
+                "step": 2, "agent": "Pattern Seeker", "status": "done",
+                "detail": f"{n} anomalies found",
+                "anomalies": n,
+                "elapsed": round(time.time() - t0, 1),
+            })
+
+            yield _sse({"step": 3, "agent": "Valuator", "status": "running"})
+            values = run_valuator(patterns)
+            total = values.get("total_ghost_economy_usd", 0)
+            findings = []
+            for f in values.get("valued_findings", []):
+                findings.append({
+                    "id": f.get("anomaly_id", ""),
+                    "entity": f.get("entity", ""),
+                    "category": f.get("category", ""),
+                    "dollar": f.get("dollar_value", 0),
+                    "annualized": f.get("annualized_value", 0),
+                    "calc": f.get("calculation", ""),
+                    "priority": f.get("priority", "MEDIUM"),
+                    "confidence": f.get("confidence_score", 0),
+                })
+            yield _sse({
+                "step": 3, "agent": "Valuator", "status": "done",
+                "detail": f"${total:,.0f} total waste",
+                "total": total,
+                "annualized": values.get("total_annualized_usd", 0),
+                "findings": findings,
+                "elapsed": round(time.time() - t0, 1),
+            })
+
+            yield _sse({"step": 4, "agent": "Action Taker", "status": "running"})
+            actions = run_action_taker(values)
+            triggered = actions.get("actions_triggered", 0)
+            yield _sse({
+                "step": 4, "agent": "Action Taker", "status": "done",
+                "detail": f"{triggered} actions triggered",
+                "triggered": triggered,
+                "elapsed": round(time.time() - t0, 1),
+            })
+
+            yield _sse({
+                "step": "complete",
+                "total": total,
+                "annualized": values.get("total_annualized_usd", 0),
+                "anomalies_found": n,
+                "actions_triggered": triggered,
+                "findings": findings,
+                "index_count": len(index_map.get("indexes", [])),
+                "sector": index_map.get("sector_detected", ""),
+                "elapsed": round(time.time() - t0, 1),
+            })
+
+        except Exception as exc:
+            log.error("SSE pipeline failed: %s", exc, exc_info=True)
+            yield _sse({"step": "error", "error": str(exc)})
+
+    return StreamingResponse(event_stream(), media_type="text/event-stream")
+
+
+def _sse(data: Dict[str, Any]) -> str:
+    """Format a dict as a Server-Sent Event string.
+
+    Args:
+        data: Event payload.
+
+    Returns:
+        SSE-formatted string.
+    """
+    return f"data: {_json.dumps(data)}\n\n"
 
 
 @app.get("/api/indexes")
