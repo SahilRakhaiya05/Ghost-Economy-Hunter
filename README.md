@@ -144,8 +144,8 @@ sequenceDiagram
 ### 1. Install
 
 ```bash
-git clone https://github.com/SahilRakhaiya05/ghost-economy-hunter.git
-cd ghost-economy-hunter
+git clone https://github.com/SahilRakhaiya05/Ghost-Economy-Hunter.git
+cd Ghost-Economy-Hunter
 pip install -r requirements.txt
 ```
 
