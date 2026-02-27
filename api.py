@@ -382,16 +382,25 @@ async def list_indexes() -> JSONResponse:
     """
     try:
         es = _es()
-        cat = es.cat.indices(format="json", h="index,docs.count,store.size")
+        cat = es.cat.indices(format="json", bytes="b")
         indexes = []
         for idx in cat:
             name = idx.get("index", "")
             if name.startswith("."):
                 continue
+            raw_bytes = int(idx.get("store.size", 0) or idx.get("pri.store.size", 0) or 0)
+            if raw_bytes >= 1_073_741_824:
+                size_str = f"{raw_bytes / 1_073_741_824:.1f}gb"
+            elif raw_bytes >= 1_048_576:
+                size_str = f"{raw_bytes / 1_048_576:.1f}mb"
+            elif raw_bytes >= 1024:
+                size_str = f"{raw_bytes / 1024:.1f}kb"
+            else:
+                size_str = f"{raw_bytes}b"
             indexes.append({
                 "name": name,
                 "doc_count": int(idx.get("docs.count", 0) or 0),
-                "size": idx.get("store.size", "0b"),
+                "size": size_str,
             })
         indexes.sort(key=lambda x: x["name"])
         return JSONResponse(content={"indexes": indexes})

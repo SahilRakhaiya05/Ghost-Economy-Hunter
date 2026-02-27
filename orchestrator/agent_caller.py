@@ -12,6 +12,7 @@ import json
 import logging
 import os
 import time
+from pathlib import Path
 from typing import Any, Dict, Generator, List, Optional
 
 import requests
@@ -77,42 +78,141 @@ def test_connection() -> Dict[str, Any]:
         return {"connected": False, "error": str(exc)}
 
 
+def _extract_list(data: Any, keys: tuple) -> List[Dict[str, Any]]:
+    """Extract a list of items from various API response shapes.
+
+    Args:
+        data: Parsed JSON response (list or dict).
+        keys: Possible dict keys to try (e.g. ("agents", "items", "data")).
+
+    Returns:
+        List of dicts.
+    """
+    if isinstance(data, list):
+        return data
+    if isinstance(data, dict):
+        for k in keys:
+            if k in data and isinstance(data[k], list):
+                return data[k]
+    return []
+
+
+def _load_local_agents() -> List[Dict[str, Any]]:
+    """Load agent definitions from local JSON files as fallback.
+
+    Returns:
+        List of agent dicts with id, name, description.
+    """
+    agents_dir = Path(__file__).resolve().parent.parent / "elastic" / "agents"
+    agents: List[Dict[str, Any]] = []
+    if agents_dir.is_dir():
+        for fp in sorted(agents_dir.glob("*.json")):
+            try:
+                raw = json.loads(fp.read_text(encoding="utf-8"))
+                agents.append({
+                    "id": raw.get("id", fp.stem),
+                    "name": raw.get("display_name", raw.get("name", fp.stem)),
+                    "description": raw.get("description", ""),
+                    "labels": raw.get("labels", []),
+                    "source": "local_config",
+                })
+            except (json.JSONDecodeError, OSError) as exc:
+                logger.debug("Skipping agent file %s: %s", fp, exc)
+    return agents
+
+
+def _load_local_tools() -> List[Dict[str, Any]]:
+    """Load tool definitions from local JSON files as fallback.
+
+    Returns:
+        List of tool dicts with id, type, description.
+    """
+    tools_dir = Path(__file__).resolve().parent.parent / "elastic" / "tools"
+    tools: List[Dict[str, Any]] = []
+    if tools_dir.is_dir():
+        for fp in sorted(tools_dir.glob("*.json")):
+            try:
+                raw = json.loads(fp.read_text(encoding="utf-8"))
+                tools.append({
+                    "id": raw.get("id", fp.stem),
+                    "name": raw.get("name", fp.stem),
+                    "type": raw.get("type", "esql"),
+                    "description": raw.get("description", ""),
+                    "source": "local_config",
+                })
+            except (json.JSONDecodeError, OSError) as exc:
+                logger.debug("Skipping tool file %s: %s", fp, exc)
+    return tools
+
+
 def list_agents() -> List[Dict[str, Any]]:
     """List all registered agents from Agent Builder.
+
+    Tries the Kibana API first; falls back to local JSON configs.
 
     Returns:
         List of agent dicts with id, name, description.
     """
     base = _base_url()
-    if not base or not _api_key():
-        return []
-    try:
-        resp = requests.get(f"{base}/api/agent_builder/agents", headers=_headers(), timeout=15)
-        if resp.status_code == 200:
-            data = resp.json()
-            return data if isinstance(data, list) else data.get("agents", [])
-    except requests.RequestException as exc:
-        logger.warning("Failed to list agents: %s", exc)
-    return []
+    if base and _api_key():
+        try:
+            resp = requests.get(
+                f"{base}/api/agent_builder/agents",
+                headers=_headers(),
+                timeout=15,
+            )
+            if resp.status_code == 200:
+                agents = _extract_list(resp.json(), ("agents", "items", "data"))
+                if agents:
+                    return agents
+            else:
+                logger.warning(
+                    "Agent Builder agents endpoint returned %d: %s",
+                    resp.status_code,
+                    resp.text[:200],
+                )
+        except requests.RequestException as exc:
+            logger.warning("Failed to list agents via API: %s", exc)
+
+    local = _load_local_agents()
+    if local:
+        logger.info("Using %d agents from local config files", len(local))
+    return local
 
 
 def list_tools() -> List[Dict[str, Any]]:
     """List all registered tools from Agent Builder.
 
+    Tries the Kibana API first; falls back to local JSON configs.
+
     Returns:
         List of tool dicts with id, type, description.
     """
     base = _base_url()
-    if not base or not _api_key():
-        return []
-    try:
-        resp = requests.get(f"{base}/api/agent_builder/tools", headers=_headers(), timeout=15)
-        if resp.status_code == 200:
-            data = resp.json()
-            return data if isinstance(data, list) else data.get("tools", [])
-    except requests.RequestException as exc:
-        logger.warning("Failed to list tools: %s", exc)
-    return []
+    if base and _api_key():
+        try:
+            resp = requests.get(
+                f"{base}/api/agent_builder/tools",
+                headers=_headers(),
+                timeout=15,
+            )
+            if resp.status_code == 200:
+                tools = _extract_list(resp.json(), ("tools", "items", "data"))
+                if tools:
+                    return tools
+            else:
+                logger.warning(
+                    "Agent Builder tools endpoint returned %d: %s",
+                    resp.status_code,
+                    resp.text[:200],
+                )
+        except requests.RequestException as exc:
+            logger.warning("Failed to list tools via API: %s", exc)
+
+    local = _load_local_tools()
+    if local:
+        logger.info("Using %d tools from local config files", len(local))
+    return local
 
 
 def _validate_response(data: Dict[str, Any], agent_id: str) -> Dict[str, Any]:
@@ -152,6 +252,13 @@ def _extract_content(raw: Dict[str, Any]) -> str:
             return out
         if isinstance(out, dict):
             return out.get("content", out.get("text", json.dumps(out)))
+
+    if "response" in raw:
+        resp = raw["response"]
+        if isinstance(resp, str):
+            return resp
+        if isinstance(resp, dict):
+            return resp.get("message", resp.get("content", resp.get("text", json.dumps(resp))))
 
     if "message" in raw:
         msg = raw["message"]

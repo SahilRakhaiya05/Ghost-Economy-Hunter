@@ -1028,7 +1028,8 @@ function sendChat(msg){
     var metaHtml='<div class="chat-meta"><span class="chat-meta-time">'+elapsed+'s</span>';
     if(d.source==='agent_builder'){
       conversationId=d.conversation_id||'';
-      botDiv.innerHTML='<span class="source-tag">Agent Builder: '+esc(d.agent_id||'')+'</span>'+formatAgentResponse(d.response);
+      var agentText=typeof d.response==='object'?(d.response.message||d.response.text||JSON.stringify(d.response)):String(d.response||'');
+      botDiv.innerHTML='<span class="source-tag">Agent Builder: '+esc(d.agent_id||'')+'</span>'+formatAgentResponse(agentText);
       metaHtml+='<span class="chat-meta-tag">Powered by Agent Builder</span>';
     } else if(d.type==='query_result'){
       var html='<span class="source-tag">ES|QL: '+esc(d.provenance?.source_index||'')+'</span>';
@@ -1072,8 +1073,15 @@ function sendChat(msg){
 }
 function formatAgentResponse(text){
   if(!text)return '<em style="color:var(--text-dim)">No response</em>';
-  try{var j=JSON.parse(text);return '<pre>'+esc(JSON.stringify(j,null,2))+'</pre>'}catch(e){}
-  return '<div>'+esc(text).replace(/\n/g,'<br>')+'</div>';
+  if(typeof text==='object'){text=text.message||text.text||JSON.stringify(text,null,2)}
+  text=String(text);
+  try{var j=JSON.parse(text);if(j.message)text=j.message;else if(j.response)text=j.response;else return '<pre>'+esc(JSON.stringify(j,null,2))+'</pre>'}catch(e){}
+  var html=esc(text);
+  html=html.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+  html=html.replace(/\n- /g,'\n<br>&bull; ').replace(/\n\* /g,'\n<br>&bull; ');
+  html=html.replace(/`([^`]+)`/g,'<code style="background:var(--surface-2);padding:1px 5px;border-radius:3px;font-family:var(--font-mono);font-size:0.72rem">$1</code>');
+  html=html.replace(/\n/g,'<br>');
+  return '<div style="line-height:1.6">'+html+'</div>';
 }
 
 /* ── Upload & Connect ── */
@@ -1265,20 +1273,38 @@ function _updateLastHunt(sources,findings,total,elapsed){
 }
 
 fetch('/api/agent-builder/agents').then(function(r){return r.json()}).then(function(d){
-  var agents=d.agents||[];
+  var agents=d.agents||d.items||d.data||[];
   $('dotAgents').className='status-dot '+(agents.length>0?'green':'yellow');
-  if(!agents.length){$('registeredAgents').innerHTML='<span style="color:var(--text-dim)">No agents registered. Run provisioning first.</span>';return}
+  if(!agents.length){$('registeredAgents').innerHTML='<span style="color:var(--text-dim)">No agents found</span>';return}
   var html='<div style="display:flex;flex-wrap:wrap;gap:8px">';
-  agents.forEach(function(a){html+='<div style="background:var(--primary-dim);padding:6px 12px;border-radius:6px"><strong style="font-size:0.78rem">'+esc(a.name||a.id)+'</strong><br><span style="font-size:0.65rem;color:var(--text-dim)">'+esc(a.id||'')+'</span></div>'});
+  agents.forEach(function(a){
+    var label=esc(a.display_name||a.name||a.id);
+    var sub=esc(a.id||'');
+    var desc=a.description?'<div style="font-size:0.6rem;color:var(--text-dim);margin-top:2px;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="'+esc(a.description)+'">'+esc(a.description)+'</div>':'';
+    html+='<div style="background:var(--primary-dim);padding:8px 14px;border-radius:8px;min-width:160px">'
+      +'<strong style="font-size:0.78rem">'+label+'</strong><br>'
+      +'<span style="font-size:0.65rem;color:var(--text-dim);font-family:var(--font-mono)">'+sub+'</span>'
+      +desc+'</div>';
+  });
   html+='</div>';$('registeredAgents').innerHTML=html;
 }).catch(function(){$('registeredAgents').innerHTML='<span style="color:var(--text-dim)">Could not load agents</span>';$('dotAgents').className='status-dot red'});
 
 fetch('/api/agent-builder/tools').then(function(r){return r.json()}).then(function(d){
-  var tools=d.tools||[];
+  var tools=d.tools||d.items||d.data||[];
   $('dotTools').className='status-dot '+(tools.length>0?'green':'yellow');
-  if(!tools.length){$('registeredTools').innerHTML='<span style="color:var(--text-dim)">No tools registered. Run provisioning first.</span>';return}
+  if(!tools.length){$('registeredTools').innerHTML='<span style="color:var(--text-dim)">No tools found</span>';return}
   var html='<div style="display:flex;flex-wrap:wrap;gap:8px">';
-  tools.forEach(function(t){html+='<div style="background:var(--purple-dim);padding:6px 12px;border-radius:6px"><strong style="font-size:0.78rem">'+esc(t.id||t.name||'')+'</strong><br><span style="font-size:0.65rem;color:var(--text-dim)">'+esc(t.type||'esql')+'</span></div>'});
+  tools.forEach(function(t){
+    var label=esc(t.name||t.id||'');
+    var sub=esc(t.id||'');
+    var ty=esc(t.type||'esql');
+    var desc=t.description?'<div style="font-size:0.6rem;color:var(--text-dim);margin-top:2px;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="'+esc(t.description)+'">'+esc(t.description)+'</div>':'';
+    html+='<div style="background:var(--purple-dim);padding:8px 14px;border-radius:8px;min-width:160px">'
+      +'<strong style="font-size:0.78rem">'+label+'</strong><br>'
+      +'<span style="font-size:0.65rem;color:var(--text-dim);font-family:var(--font-mono)">'+sub+'</span>'
+      +'<div style="margin-top:2px"><span style="font-size:0.6rem;background:var(--surface-2);padding:1px 6px;border-radius:3px;color:var(--text-dim)">'+ty+'</span></div>'
+      +desc+'</div>';
+  });
   html+='</div>';$('registeredTools').innerHTML=html;
 }).catch(function(){$('registeredTools').innerHTML='<span style="color:var(--text-dim)">Could not load tools</span>'});
 
