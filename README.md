@@ -46,7 +46,7 @@ flowchart TD
         A3 -->|"valued findings"| A4
     end
 
-    subgraph tools [ES|QL Tools]
+    subgraph tools [ESQL Tools]
         T1[usage_anomaly]
         T2[runtime_anomaly]
         T3[energy_anomaly]
@@ -59,9 +59,9 @@ flowchart TD
         WF[Elastic Workflow]
     end
 
-    A1 -->|"ES|QL COUNT"| ES
+    A1 -->|"ESQL COUNT"| ES
     A2 --> T1 & T2 & T3
-    T1 & T2 & T3 -->|"ES|QL queries"| ES
+    T1 & T2 & T3 -->|"ESQL queries"| ES
     A3 --> T4
     T4 -->|"pricing lookup"| ES
     A4 --> WF
