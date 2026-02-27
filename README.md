@@ -142,7 +142,7 @@ sequenceDiagram
 ### 1. Install
 
 ```bash
-git clone https://github.com/your-org/ghost-economy-hunter.git
+git clone https://github.com/SahilRakhaiya05/ghost-economy-hunter.git
 cd ghost-economy-hunter
 pip install -r requirements.txt
 ```
@@ -229,34 +229,18 @@ When the Valuator agent says a hospital wing wasted $47,000 on unused insulin, t
 
 All 4 agents and 4 tools are registered in Elastic Agent Builder via the Kibana API.
 
-### Registered Components
+### Registered Agents and Tools
 
-```mermaid
-graph LR
-    subgraph Agents
-        C["ghost-cartographer"]
-        PS["ghost-pattern-seeker"]
-        V["ghost-valuator"]
-        AT["ghost-action-taker"]
-    end
-
-    subgraph Tools["ES|QL Tools"]
-        T1["ghost-usage-anomaly"]
-        T2["ghost-runtime-anomaly"]
-        T3["ghost-energy-anomaly"]
-        T4["ghost-value-calculator"]
-    end
-
-    PS --> T1
-    PS --> T2
-    PS --> T3
-    V --> T4
-
-    style C fill:#2563EB,color:#fff,stroke:none
-    style PS fill:#7C3AED,color:#fff,stroke:none
-    style V fill:#059669,color:#fff,stroke:none
-    style AT fill:#D97706,color:#fff,stroke:none
-```
+| Component | ID | Type | Assigned Tools |
+|-----------|----|------|----------------|
+| Cartographer | `ghost-cartographer` | Agent | — (uses ES cat API directly) |
+| Pattern Seeker | `ghost-pattern-seeker` | Agent | `ghost-usage-anomaly`, `ghost-runtime-anomaly`, `ghost-energy-anomaly` |
+| Valuator | `ghost-valuator` | Agent | `ghost-value-calculator` |
+| Action Taker | `ghost-action-taker` | Agent | — (uses Slack + Workflow APIs) |
+| Usage Anomaly | `ghost-usage-anomaly` | ES\|QL Tool | Detects drug over-procurement |
+| Runtime Anomaly | `ghost-runtime-anomaly` | ES\|QL Tool | Detects idle machine waste |
+| Energy Anomaly | `ghost-energy-anomaly` | ES\|QL Tool | Detects building energy waste |
+| Value Calculator | `ghost-value-calculator` | ES\|QL Tool | Looks up unit pricing |
 
 ### ES|QL Tool Details
 
@@ -399,70 +383,6 @@ ghost-economy-hunter/
 └── dashboard/
     └── kibana_dashboard.json       # Kibana dashboard export
 ```
-
----
-
-## Demo Guide
-
-### Setup (1 min)
-
-```bash
-pip install -r requirements.txt
-# Edit .env with your Elastic Cloud credentials
-python run.py
-```
-
-### Demo Flow (4 min)
-
-| Step | What to Show | What to Say |
-|------|-------------|-------------|
-| 1. **Dashboard** | Impact metrics, system status dots, comparison table | "Here's the overview — all green means ES connected, agents registered, tools loaded." |
-| 2. **Hunt** | Click "Select All" then "Run Hunt" | "Watch 4 agents work in real-time. Each one streams its reasoning — you can see the actual ES\|QL queries being executed." |
-| 3. **Results** | Expand findings table | "Every finding has a dollar value calculated from real pricing data, a priority score, and a full audit trail." |
-| 4. **Chat** | Type "Show me drug waste patterns" | "Natural language queries get converted to ES\|QL. You can also talk directly to any agent via the Agent Builder API." |
-| 5. **Connect Data** | Show CSV upload | "It works with any data — upload a CSV from your ERP, IoT feed, or financial system. The generic scanner auto-detects numeric fields and finds waste patterns." |
-| 6. **Architecture** | Show live indexes, agents, tools | "Everything you see is live from the Elastic cluster — registered agents, tools, and real data." |
-
-### Key Points
-
-- **Any data source** — Not limited to the 3 sample datasets. Upload any CSV or connect any index.
-- **Real queries, real data** — Every finding comes from live ES|QL queries. Zero fabrication.
-- **Agent Builder native** — 4 agents + 4 ES|QL tools registered via Kibana API. MCP + A2A supported.
-- **Full transparency** — See every query, reasoning step, and tool call in real-time.
-- **End-to-end automation** — From detection to dollar value to Slack alert to audit record. No manual steps.
-
----
-
-## Technology Stack
-
-| Component | Technology | Why |
-|-----------|-----------|-----|
-| AI Agents | Elastic Agent Builder | Native ES integration, MCP/A2A protocol support |
-| Queries | ES\|QL (parameterized) | Deterministic, auditable, no hallucination risk |
-| Backend | Python 3.11+ / FastAPI | Async SSE streaming, type hints, fast |
-| Data Layer | Elasticsearch 8.x | Scalable, supports any schema |
-| Streaming | Server-Sent Events | Real-time agent reasoning to browser |
-| Alerts | Slack Webhooks | Instant notification on findings |
-| Workflows | Elastic Workflows | Automated response to verified waste |
-| Frontend | Single-file HTML/CSS/JS | Zero build step, works everywhere |
-
----
-
-## Why Ghost Economy Hunter Stands Out
-
-| Criteria | What We Built |
-|----------|--------------|
-| **Real-world problem** | Every organization has ghost economies — $1.2 trillion in hidden waste annually across US companies alone (source: Deloitte) |
-| **Real data, not mockups** | NYC building data from official city API, retail data from real inventory records, pricing from CMS/BLS/EIA government databases |
-| **Deep Agent Builder usage** | 4 agents + 4 parameterized ES\|QL tools registered via Kibana API. MCP server + A2A protocol endpoints. Elastic Workflows for automated actions. |
-| **ES\|QL native** | Every query is ES\|QL — auditable, deterministic, zero hallucination risk. No Query DSL fallback needed. |
-| **Universal, not one-trick** | Upload any CSV from any industry. Generic scanner auto-adapts. 8 pre-built sector templates. |
-| **End-to-end pipeline** | Detection -> Dollar valuation -> Action (Slack + Workflow + Audit). Not just detection — it calculates impact and acts. |
-| **Full transparency** | Live SSE streaming shows agent reasoning, tool selection, and ES\|QL queries in real-time. Nothing hidden. |
-| **Production-grade code** | Type hints, docstrings, logging, explicit exception handling, constants module, no hardcoded secrets. One-command launch. |
-| **Beautiful UI** | 7-tab dashboard with dark/light mode, skeleton loaders, toast notifications, responsive design. Single HTML file, zero build step. |
-
----
 
 ## License
 
