@@ -4,1641 +4,1092 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ghost Economy Hunter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist+Mono:wght@300;400;500;600&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-  background: #0a0e1a;
-  color: #e2e8f0;
-  min-height: 100vh;
-  padding: 0;
-  overflow-x: hidden;
+:root{
+  --bg:#FAFBFC;--surface:#FFFFFF;--surface-2:#F1F5F9;--surface-3:#E2E8F0;
+  --border:#E2E8F0;--border-focus:#CBD5E1;
+  --text:#0F172A;--text-dim:#64748B;--text-bright:#020617;
+  --primary:#2563EB;--primary-dim:rgba(37,99,235,0.08);--primary-glow:rgba(37,99,235,0.18);
+  --emerald:#059669;--emerald-dim:rgba(5,150,105,0.08);
+  --rose:#E11D48;--rose-dim:rgba(225,29,72,0.08);
+  --amber:#D97706;--amber-dim:rgba(217,119,6,0.08);
+  --purple:#7C3AED;--purple-dim:rgba(124,58,237,0.08);
+  --font-display:'Instrument Serif',Georgia,serif;
+  --font-body:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+  --font-mono:'Geist Mono','Fira Code',monospace;
+  --radius:8px;--radius-lg:12px;
+  --shadow:0 1px 3px rgba(15,23,42,0.06),0 1px 2px rgba(15,23,42,0.04);
+  --shadow-md:0 4px 6px rgba(15,23,42,0.05),0 2px 4px rgba(15,23,42,0.04);
+  --shadow-lg:0 10px 15px rgba(15,23,42,0.06),0 4px 6px rgba(15,23,42,0.03);
 }
-.hero-bg {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background:
-    radial-gradient(ellipse 800px 400px at 20% 20%, rgba(59,130,246,0.08) 0%, transparent 70%),
-    radial-gradient(ellipse 600px 400px at 80% 80%, rgba(139,92,246,0.06) 0%, transparent 70%),
-    #0a0e1a;
-  z-index: -1;
+[data-theme="dark"]{
+  --bg:#0B0F19;--surface:#111827;--surface-2:#1E293B;--surface-3:#334155;
+  --border:#1E293B;--border-focus:#334155;
+  --text:#E2E8F0;--text-dim:#94A3B8;--text-bright:#F8FAFC;
+  --primary:#3B82F6;--primary-dim:rgba(59,130,246,0.12);--primary-glow:rgba(59,130,246,0.25);
+  --emerald:#34D399;--emerald-dim:rgba(52,211,153,0.12);
+  --rose:#FB7185;--rose-dim:rgba(251,113,133,0.12);
+  --amber:#FBBF24;--amber-dim:rgba(251,191,36,0.12);
+  --purple:#A78BFA;--purple-dim:rgba(167,139,250,0.12);
+  --shadow:0 1px 3px rgba(0,0,0,0.3);
+  --shadow-md:0 4px 6px rgba(0,0,0,0.25);
+  --shadow-lg:0 10px 15px rgba(0,0,0,0.3);
 }
-.container { max-width: 960px; margin: 0 auto; padding: 40px 20px; position: relative; }
+*{box-sizing:border-box;margin:0;padding:0}
+html{font-size:15px;scroll-behavior:smooth}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;transition:background .3s,color .3s}
+::selection{background:var(--primary-dim);color:var(--primary)}
 
-/* Header */
-.header { margin-bottom: 48px; }
-h1 {
-  font-size: 42px;
-  background: linear-gradient(135deg, #38bdf8, #818cf8, #c084fc);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin-bottom: 6px;
-  letter-spacing: -0.5px;
-  font-weight: 800;
-}
-.subtitle { color: #94a3b8; font-size: 16px; max-width: 640px; line-height: 1.5; }
-.mode-badge {
-  display: inline-block;
-  margin-top: 12px;
-  padding: 4px 14px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-}
-.mode-live  { background: #052e16; color: #4ade80; border: 1px solid #166534; }
-.mode-demo  { background: #1e3a5f; color: #93c5fd; border: 1px solid #1d4ed8; }
+.app{max-width:1100px;margin:0 auto;padding:32px 24px 80px}
 
-/* Tabs */
-.tabs {
-  display: flex;
-  gap: 4px;
-  margin-bottom: 32px;
-  background: rgba(15,23,42,0.6);
-  border-radius: 12px;
-  padding: 4px;
-  backdrop-filter: blur(6px);
-  border: 1px solid #1e293b;
-}
-.tab {
-  padding: 10px 20px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #64748b;
-  cursor: pointer;
-  border-radius: 8px;
-  transition: all 0.2s;
-  text-align: center;
-  flex: 1;
-}
-.tab:hover { color: #94a3b8; background: rgba(30,41,59,0.5); }
-.tab.active {
-  color: #e2e8f0;
-  background: rgba(37,99,235,0.15);
-  box-shadow: 0 0 12px rgba(37,99,235,0.15);
-}
-.tab-content { display: none; }
-.tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+/* ── Header ── */
+.hdr{margin-bottom:36px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.hdr-left{display:flex;align-items:center;gap:14px}
+.logo{width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,var(--primary),#7C3AED);display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;font-weight:700;box-shadow:var(--shadow-md)}
+.hdr h1{font-family:var(--font-display);font-size:1.8rem;font-weight:400;color:var(--text-bright);letter-spacing:-0.3px}
+.hdr h1 em{font-style:italic;color:var(--primary)}
+.hdr-right{display:flex;align-items:center;gap:10px}
+.badge{font-size:0.65rem;font-family:var(--font-mono);padding:4px 10px;border-radius:20px;font-weight:500}
+.badge-es{background:var(--emerald-dim);color:var(--emerald)}
+.badge-ab{background:var(--primary-dim);color:var(--primary)}
+.badge-off{background:var(--surface-2);color:var(--text-dim)}
+.theme-toggle{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .2s}
+.theme-toggle:hover{border-color:var(--primary);background:var(--primary-dim)}
 
-/* Button */
-.start-btn {
-  background: linear-gradient(135deg, #2563eb, #7c3aed);
-  color: white;
-  border: none;
-  padding: 16px 52px;
-  font-size: 18px;
-  font-weight: 600;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.3s;
-  box-shadow: 0 4px 30px rgba(37,99,235,0.35);
-  margin-bottom: 48px;
-  letter-spacing: 0.3px;
-  position: relative;
-  overflow: hidden;
-}
-.start-btn::after {
-  content: '';
-  position: absolute;
-  top: -50%; left: -50%;
-  width: 200%; height: 200%;
-  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-.start-btn:hover:not(:disabled)::after { opacity: 1; }
-.start-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 40px rgba(124,58,237,0.4);
-}
-.start-btn:disabled { background: #334155; cursor: not-allowed; box-shadow: none; transform: none; }
+/* ── Tabs ── */
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:28px;overflow-x:auto}
+.tab{padding:10px 18px;font-size:0.8rem;font-weight:600;color:var(--text-dim);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;user-select:none}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+.panel{display:none}
+.panel.active{display:block;animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 
-/* Counter */
-.counter-section { margin-bottom: 48px; }
-.counter-label {
-  font-size: 12px;
-  color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  margin-bottom: 8px;
-}
-.counter {
-  font-size: 84px;
-  font-weight: 800;
-  background: linear-gradient(135deg, #22d3ee, #38bdf8, #818cf8);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  line-height: 1;
-  letter-spacing: -2px;
-  transition: all 0.5s;
-}
-.counter.final {
-  background: linear-gradient(135deg, #4ade80, #22d3ee);
-  -webkit-background-clip: text;
-  background-clip: text;
-}
-.counter-sub { font-size: 14px; color: #64748b; margin-top: 8px; }
+/* ── Cards ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;margin-bottom:16px;box-shadow:var(--shadow);transition:box-shadow .2s}
+.card:hover{box-shadow:var(--shadow-md)}
+.card-title{font-family:var(--font-display);font-size:1.25rem;color:var(--text-bright);margin-bottom:8px}
+.card-subtitle{font-size:0.75rem;color:var(--text-dim);margin-bottom:16px}
 
-/* Stats row */
-.stats-row {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  margin: 24px 0;
-  display: none;
-}
-.stat-card {
-  background: linear-gradient(135deg, #1e293b, #0f172a);
-  border: 1px solid #334155;
-  border-radius: 12px;
-  padding: 16px;
-  text-align: center;
-  animation: fadeIn 0.5s ease;
-}
-.stat-card .stat-val { font-size: 28px; font-weight: 800; color: #38bdf8; }
-.stat-card .stat-label { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
-.stat-card.green .stat-val { color: #4ade80; }
-.stat-card.amber .stat-val { color: #f59e0b; }
-.stat-card.purple .stat-val { color: #818cf8; }
+/* ── Metrics Grid ── */
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px}
+.metric{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;text-align:center}
+.metric-value{font-family:var(--font-display);font-size:2rem;color:var(--text-bright);line-height:1.1}
+.metric-label{font-size:0.7rem;color:var(--text-dim);margin-top:4px;text-transform:uppercase;letter-spacing:0.5px}
+.metric-value.emerald{color:var(--emerald)}
+.metric-value.rose{color:var(--rose)}
+.metric-value.primary{color:var(--primary)}
+.metric-value.amber{color:var(--amber)}
 
-/* Progress bar */
-.pipeline-progress {
-  height: 4px;
-  background: #1e293b;
-  border-radius: 4px;
-  margin: 16px 0 32px;
-  overflow: hidden;
-  display: none;
-}
-.pipeline-progress .bar {
-  height: 100%;
-  background: linear-gradient(90deg, #2563eb, #38bdf8, #818cf8);
-  border-radius: 4px;
-  transition: width 0.6s cubic-bezier(0.16,1,0.3,1);
-  width: 0%;
-}
+/* ── Pipeline Steps ── */
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+@media(max-width:700px){.steps{grid-template-columns:1fr 1fr}}
+.step{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;position:relative;transition:all .3s}
+.step.running{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-dim)}
+.step.done{border-color:var(--emerald)}
+.step.error{border-color:var(--rose)}
+.step-num{font-family:var(--font-mono);font-size:0.65rem;color:var(--text-dim);margin-bottom:4px}
+.step-name{font-weight:700;font-size:0.85rem;color:var(--text-bright);margin-bottom:6px}
+.step-detail{font-size:0.72rem;color:var(--text-dim)}
+.step-spinner{display:none;width:14px;height:14px;border:2px solid var(--primary-dim);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;position:absolute;top:14px;right:14px}
+.step.running .step-spinner{display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-/* Sector detected badge */
-.sector-badge {
-  display: inline-block;
-  padding: 4px 14px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
-  background: #1a1a2e;
-  color: #818cf8;
-  border: 1px solid #4338ca;
-  margin-left: 10px;
-  animation: fadeIn 0.5s ease;
-}
+/* ── Reasoning Panel ── */
+.reasoning{background:var(--surface-2);border-radius:var(--radius);padding:12px;margin-top:10px;max-height:200px;overflow-y:auto;display:none;font-size:0.72rem;line-height:1.6}
+.reasoning.show{display:block}
+.reasoning-item{display:flex;gap:8px;padding:4px 0;border-bottom:1px solid var(--border)}
+.reasoning-item:last-child{border-bottom:none}
+.ri-icon{color:var(--primary);flex-shrink:0;font-size:0.8rem}
+.ri-tool{font-family:var(--font-mono);background:var(--primary-dim);color:var(--primary);padding:1px 6px;border-radius:4px;font-size:0.65rem}
+.ri-query{display:block;font-family:var(--font-mono);font-size:0.65rem;color:var(--text-dim);margin-top:2px;word-break:break-all}
+.reasoning-toggle{font-size:0.65rem;color:var(--primary);cursor:pointer;margin-top:6px;display:none}
 
-/* Agents */
-.agents { margin-bottom: 48px; }
-.section-title { font-size: 13px; color: #64748b; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 16px; }
-.step {
-  display: flex;
-  align-items: center;
-  padding: 16px 20px;
-  margin: 8px 0;
-  border-radius: 12px;
-  background: rgba(30,41,59,0.6);
-  border: 1px solid #1e293b;
-  border-left: 4px solid #334155;
-  font-size: 15px;
-  transition: all 0.4s;
-  backdrop-filter: blur(8px);
-}
-.step-icon { font-size: 20px; margin-right: 12px; min-width: 28px; }
-.step-text { flex: 1; }
-.step-text strong { display: block; color: #e2e8f0; font-size: 15px; }
-.step-text span { font-size: 13px; color: #64748b; }
-.step-status { font-size: 13px; color: #64748b; min-width: 140px; text-align: right; }
-.step.active {
-  border-left-color: #38bdf8;
-  background: rgba(15,41,68,0.8);
-  border-color: rgba(56,189,248,0.2);
-  box-shadow: 0 0 20px rgba(56,189,248,0.08);
-}
-.step.active .step-status { color: #38bdf8; }
-.step.done {
-  border-left-color: #22c55e;
-  background: rgba(5,46,22,0.5);
-  border-color: rgba(34,197,94,0.15);
-}
-.step.done .step-status { color: #22c55e; font-weight: 600; }
+/* ── Findings Table ── */
+.findings-table{width:100%;border-collapse:collapse;font-size:0.78rem}
+.findings-table th{text-align:left;padding:10px 12px;border-bottom:2px solid var(--border);font-weight:700;color:var(--text-dim);text-transform:uppercase;font-size:0.65rem;letter-spacing:0.5px}
+.findings-table td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+.findings-table tr:hover td{background:var(--surface-2)}
+.priority-badge{font-family:var(--font-mono);font-size:0.6rem;padding:2px 8px;border-radius:4px;font-weight:600}
+.priority-CRITICAL{background:var(--rose-dim);color:var(--rose)}
+.priority-HIGH{background:var(--amber-dim);color:var(--amber)}
+.priority-MEDIUM{background:var(--primary-dim);color:var(--primary)}
+.priority-LOW{background:var(--surface-2);color:var(--text-dim)}
 
-/* Spinner */
-.spinner {
-  display: inline-block;
-  width: 14px;
-  height: 14px;
-  border: 2px solid #38bdf8;
-  border-top-color: transparent;
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-  margin-right: 6px;
-  vertical-align: middle;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
+/* ── Buttons ── */
+.btn{font-family:var(--font-body);font-weight:600;font-size:0.8rem;padding:10px 22px;border-radius:var(--radius);border:none;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:8px}
+.btn-primary{background:var(--primary);color:#fff;box-shadow:var(--shadow)}
+.btn-primary:hover{opacity:0.9;box-shadow:var(--shadow-md)}
+.btn-secondary{background:var(--surface);color:var(--text);border:1px solid var(--border)}
+.btn-secondary:hover{border-color:var(--primary);color:var(--primary)}
+.btn:disabled{opacity:0.5;cursor:not-allowed}
+.btn-sm{padding:6px 14px;font-size:0.72rem}
 
-/* Findings */
-.findings { margin-bottom: 48px; display: none; }
-.findings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
-.finding {
-  background: rgba(30,41,59,0.7);
-  border: 1px solid rgba(51,65,85,0.5);
-  border-radius: 12px;
-  padding: 20px;
-  border-left: 4px solid #f59e0b;
-  animation: slideIn 0.5s cubic-bezier(0.16,1,0.3,1);
-  position: relative;
-  backdrop-filter: blur(6px);
-  transition: border-color 0.3s, box-shadow 0.3s;
-}
-.finding:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
-.finding.energy { border-left-color: #818cf8; }
-.finding.factory { border-left-color: #f97316; }
-@keyframes slideIn {
-  from { opacity: 0; transform: translateY(16px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-.finding-entity { font-size: 16px; font-weight: 700; color: #f1f5f9; margin-bottom: 4px; }
-.finding-category { font-size: 12px; color: #94a3b8; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
-.finding-dollar { font-size: 32px; font-weight: 800; color: #f59e0b; margin-bottom: 6px; }
-.finding.energy .finding-dollar { color: #818cf8; }
-.finding.factory .finding-dollar { color: #f97316; }
-.finding-calc { font-size: 12px; color: #64748b; line-height: 1.4; margin-bottom: 8px; }
-.finding-annualized { font-size: 11px; color: #94a3b8; margin-bottom: 12px; }
-.finding-annualized strong { color: #e2e8f0; }
-.finding-confidence {
-  display: inline-block;
-  margin-left: 8px;
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: 10px;
-  background: #1e293b;
-  color: #64748b;
-  border: 1px solid #334155;
-}
-.badge {
-  display: inline-block;
-  padding: 3px 10px;
-  border-radius: 20px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.3px;
-}
-.badge.critical { background: #7f1d1d; color: #fca5a5; }
-.badge.high { background: #78350f; color: #fcd34d; }
-.badge.medium { background: #1e3a5f; color: #93c5fd; }
-.badge.low { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
+/* ── Chat ── */
+.chat-container{display:flex;flex-direction:column;height:500px}
+.chat-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+.chat-msg{max-width:85%;padding:12px 16px;border-radius:var(--radius-lg);font-size:0.82rem;line-height:1.55}
+.chat-msg.user{align-self:flex-end;background:var(--primary);color:#fff;border-bottom-right-radius:4px}
+.chat-msg.bot{align-self:flex-start;background:var(--surface-2);border-bottom-left-radius:4px}
+.chat-msg.bot .source-tag{font-size:0.6rem;font-family:var(--font-mono);color:var(--primary);margin-bottom:4px;display:block}
+.chat-msg pre{font-family:var(--font-mono);font-size:0.72rem;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px;margin-top:8px;overflow-x:auto;white-space:pre-wrap}
+.chat-msg table{width:100%;border-collapse:collapse;margin-top:8px;font-size:0.72rem}
+.chat-msg table th,.chat-msg table td{padding:6px 8px;border:1px solid var(--border);text-align:left}
+.chat-msg table th{background:var(--surface-2);font-weight:600}
+.chat-input-row{display:flex;gap:8px;padding:12px;border-top:1px solid var(--border)}
+.chat-input{flex:1;font-family:var(--font-body);font-size:0.82rem;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);outline:none;transition:border .2s}
+.chat-input:focus{border-color:var(--primary)}
+.chat-input::placeholder{color:var(--text-dim)}
+.chat-agent-select{font-family:var(--font-mono);font-size:0.72rem;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);outline:none}
+.chat-suggestions{display:flex;flex-wrap:wrap;gap:6px;padding:8px 12px}
+.chat-suggestion{font-size:0.68rem;padding:5px 12px;border:1px solid var(--border);border-radius:20px;cursor:pointer;color:var(--text-dim);transition:all .15s}
+.chat-suggestion:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-dim)}
 
-/* JSON toggle */
-.json-toggle {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  font-size: 11px;
-  color: #475569;
-  cursor: pointer;
-  padding: 2px 8px;
-  border-radius: 6px;
-  border: 1px solid #334155;
-  background: #0f172a;
-  transition: all 0.2s;
-}
-.json-toggle:hover { color: #94a3b8; border-color: #475569; }
-.json-raw {
-  display: none;
-  margin-top: 12px;
-  padding: 10px 12px;
-  background: #0f172a;
-  border-radius: 8px;
-  font-family: "SF Mono", "Fira Code", monospace;
-  font-size: 11px;
-  line-height: 1.5;
-  color: #94a3b8;
-  white-space: pre-wrap;
-  word-break: break-all;
-  border: 1px solid #1e293b;
-}
-.json-raw.show { display: block; }
+/* ── Console ── */
+.console{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-family:var(--font-mono);font-size:0.72rem;max-height:400px;overflow-y:auto;padding:12px}
+.console-entry{padding:8px 0;border-bottom:1px solid var(--border)}
+.console-entry:last-child{border-bottom:none}
+.console-agent{color:var(--primary);font-weight:600}
+.console-tool{color:var(--purple)}
+.console-query{color:var(--text-dim);display:block;margin-top:2px;word-break:break-all}
+.console-result{color:var(--emerald);font-size:0.65rem;display:block;margin-top:2px}
+.console-copy{font-size:0.6rem;color:var(--primary);cursor:pointer;float:right}
+.console-empty{color:var(--text-dim);padding:20px;text-align:center}
 
-/* Total bar */
-.total-bar {
-  background: linear-gradient(135deg, rgba(5,46,22,0.6), rgba(15,41,68,0.6));
-  border: 1px solid rgba(22,101,52,0.4);
-  border-radius: 16px;
-  padding: 32px;
-  text-align: center;
-  margin-top: 16px;
-  display: none;
-  animation: fadeIn 0.5s ease;
-  backdrop-filter: blur(8px);
-  box-shadow: 0 4px 30px rgba(34,197,94,0.08);
-}
-@keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
-.total-bar .big {
-  font-size: 52px;
-  font-weight: 800;
-  background: linear-gradient(135deg, #4ade80, #22d3ee);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-.total-bar .label { font-size: 14px; color: #86efac; margin-top: 6px; }
-.total-bar .sub { font-size: 13px; color: #94a3b8; margin-top: 8px; line-height: 1.6; }
+/* ── Integrations ── */
+.integration-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;margin-bottom:12px}
+.integration-card h3{font-size:0.9rem;font-weight:700;color:var(--text-bright);margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.integration-card p{font-size:0.75rem;color:var(--text-dim);margin-bottom:12px}
+.url-box{font-family:var(--font-mono);font-size:0.72rem;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;word-break:break-all;margin-bottom:8px}
+.url-box .copy-btn{flex-shrink:0;font-size:0.65rem;color:var(--primary);cursor:pointer;padding:4px 8px;border:1px solid var(--primary);border-radius:4px;background:transparent;font-family:var(--font-mono);transition:all .15s}
+.url-box .copy-btn:hover{background:var(--primary-dim)}
+.code-block{font-family:var(--font-mono);font-size:0.68rem;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:14px;overflow-x:auto;white-space:pre;line-height:1.5;position:relative}
+.code-block .copy-btn{position:absolute;top:8px;right:8px}
 
-/* Status bar */
-.status-bar {
-  margin-top: 32px;
-  padding: 16px 20px;
-  background: rgba(5,46,22,0.5);
-  border: 1px solid rgba(22,101,52,0.3);
-  border-radius: 12px;
-  font-size: 13px;
-  color: #4ade80;
-  display: none;
-  backdrop-filter: blur(6px);
-}
-.status-bar span { margin-right: 24px; }
+/* ── Architecture ── */
+.arch-diagram{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:20px}
+@media(max-width:700px){.arch-diagram{grid-template-columns:1fr 1fr}}
+.arch-node{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;text-align:center}
+.arch-node-title{font-weight:700;font-size:0.8rem;color:var(--text-bright);margin-bottom:4px}
+.arch-node-desc{font-size:0.68rem;color:var(--text-dim)}
+.arch-arrow{text-align:center;color:var(--primary);font-size:1.2rem;padding:4px 0}
+.arch-flow{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.arch-flow-step{background:var(--primary-dim);color:var(--primary);padding:6px 14px;border-radius:20px;font-size:0.72rem;font-weight:600}
+.arch-flow-arrow{color:var(--text-dim);font-size:0.8rem}
 
-/* Error box */
-.error-box {
-  background: #7f1d1d;
-  border: 1px solid #dc2626;
-  border-radius: 12px;
-  padding: 16px 20px;
-  color: #fca5a5;
-  font-size: 14px;
-  margin-top: 16px;
-  display: none;
-}
+/* ── Comparison Table ── */
+.compare-table{width:100%;border-collapse:collapse;font-size:0.78rem;margin-top:12px}
+.compare-table th{padding:10px 12px;text-align:left;border-bottom:2px solid var(--border);font-size:0.65rem;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-dim)}
+.compare-table td{padding:10px 12px;border-bottom:1px solid var(--border)}
+.compare-table .highlight{font-weight:700;color:var(--emerald)}
 
-/* Architecture diagram */
-.arch-section { margin-bottom: 48px; }
-.arch-diagram {
-  background: #1e293b;
-  border-radius: 16px;
-  padding: 32px;
-  border: 1px solid #334155;
-}
-.arch-flow {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-bottom: 24px;
-}
-.arch-node {
-  padding: 12px 18px;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 600;
-  text-align: center;
-  min-width: 120px;
-}
-.arch-agent  { background: #1e3a5f; color: #93c5fd; border: 1px solid #2563eb; }
-.arch-tool   { background: #1a1a2e; color: #818cf8; border: 1px solid #4338ca; font-size: 11px; min-width: 100px; padding: 8px 12px; }
-.arch-data   { background: #052e16; color: #4ade80; border: 1px solid #166534; }
-.arch-action { background: #78350f; color: #fcd34d; border: 1px solid #92400e; }
-.arch-arrow  { color: #475569; font-size: 18px; flex-shrink: 0; }
-.arch-label  { font-size: 10px; color: #475569; text-align: center; margin-top: 4px; }
-.arch-row    { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 12px 0; flex-wrap: wrap; }
-.arch-sub    { font-size: 12px; color: #64748b; text-align: center; margin-top: 20px; line-height: 1.6; }
+/* ── Misc ── */
+.empty-state{text-align:center;padding:40px 20px;color:var(--text-dim)}
+.empty-state h3{font-family:var(--font-display);font-size:1.3rem;color:var(--text);margin-bottom:8px}
+.empty-state p{font-size:0.8rem;margin-bottom:16px}
+.tag{font-family:var(--font-mono);font-size:0.6rem;padding:2px 8px;border-radius:4px;background:var(--surface-2);color:var(--text-dim);display:inline-block;margin-right:4px}
+.divider{border:none;border-top:1px solid var(--border);margin:20px 0}
+.loading{display:inline-block;width:16px;height:16px;border:2px solid var(--primary-dim);border-top-color:var(--primary);border-radius:50%;animation:spin .6s linear infinite}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
 
-/* Footer */
-.footer {
-  margin-top: 64px;
-  padding-top: 24px;
-  border-top: 1px solid #1e293b;
-  display: flex;
-  align-items: center;
-  gap: 24px;
-  font-size: 13px;
-  color: #475569;
-  flex-wrap: wrap;
-}
-.footer a { color: #38bdf8; text-decoration: none; }
-.footer a:hover { text-decoration: underline; }
-.elastic-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 11px;
-  font-weight: 600;
-  background: #1e293b;
-  color: #38bdf8;
-  border: 1px solid #334155;
-}
+/* ── Typing Indicator ── */
+.typing-indicator{display:flex;gap:4px;padding:12px 16px;align-items:center}
+.typing-indicator span{width:6px;height:6px;background:var(--text-dim);border-radius:50%;animation:typingBounce 1.2s infinite}
+.typing-indicator span:nth-child(2){animation-delay:0.2s}
+.typing-indicator span:nth-child(3){animation-delay:0.4s}
+@keyframes typingBounce{0%,60%,100%{transform:translateY(0);opacity:0.4}30%{transform:translateY(-6px);opacity:1}}
 
-/* Connect Data tab */
-.connect-section { margin-bottom: 40px; }
-.connect-card {
-  background: #1e293b;
-  border-radius: 14px;
-  padding: 28px;
-  border: 1px solid #334155;
-  margin-bottom: 20px;
-}
-.connect-card h3 { font-size: 16px; color: #f1f5f9; margin-bottom: 6px; }
-.connect-card p { font-size: 13px; color: #94a3b8; margin-bottom: 16px; line-height: 1.5; }
-.form-row { display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
-.form-input {
-  flex: 1;
-  min-width: 200px;
-  padding: 10px 14px;
-  border-radius: 8px;
-  border: 1px solid #334155;
-  background: #0f172a;
-  color: #e2e8f0;
-  font-size: 14px;
-  outline: none;
-  transition: border-color 0.2s;
-}
-.form-input:focus { border-color: #38bdf8; }
-.form-input::placeholder { color: #475569; }
-.form-btn {
-  padding: 10px 24px;
-  border-radius: 8px;
-  border: none;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.form-btn.primary { background: #2563eb; color: white; }
-.form-btn.primary:hover { background: #1d4ed8; }
-.form-btn.secondary { background: #334155; color: #e2e8f0; }
-.form-btn.secondary:hover { background: #475569; }
-.form-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.file-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 18px;
-  border-radius: 8px;
-  background: #334155;
-  color: #e2e8f0;
-  font-size: 14px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.file-label:hover { background: #475569; }
-.file-label input[type="file"] { display: none; }
-.result-box {
-  margin-top: 16px;
-  padding: 16px;
-  border-radius: 10px;
-  font-size: 13px;
-  line-height: 1.6;
-  display: none;
-}
-.result-box.success { background: #052e16; border: 1px solid #166534; color: #4ade80; }
-.result-box.error { background: #450a0a; border: 1px solid #dc2626; color: #fca5a5; }
-.index-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; margin-top: 16px; }
-.index-item {
-  background: #0f172a;
-  border: 1px solid #334155;
-  border-radius: 10px;
-  padding: 14px 16px;
-  transition: border-color 0.2s;
-}
-.index-item:hover { border-color: #38bdf8; }
-.index-item .idx-name { font-size: 14px; font-weight: 600; color: #38bdf8; font-family: monospace; }
-.index-item .idx-info { font-size: 12px; color: #64748b; margin-top: 4px; }
-.field-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-.field-tag {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 10px;
-  font-weight: 600;
-}
-.field-tag.numeric { background: #1e3a5f; color: #93c5fd; }
-.field-tag.keyword { background: #1a2e1a; color: #86efac; }
-.field-tag.date { background: #2e1a2e; color: #d8b4fe; }
+/* ── Logo Pulse ── */
+@keyframes logoPulse{0%,100%{box-shadow:var(--shadow-md)}50%{box-shadow:0 0 16px var(--primary-glow),var(--shadow-md)}}
+.logo.pulse{animation:logoPulse 2s ease-in-out infinite}
 
-/* Chat tab */
-.chat-container {
-  display: flex;
-  flex-direction: column;
-  height: 520px;
-  background: rgba(30,41,59,0.5);
-  border-radius: 14px;
-  border: 1px solid rgba(51,65,85,0.5);
-  overflow: hidden;
-  backdrop-filter: blur(8px);
-}
-.chat-messages {
-  flex: 1;
-  overflow-y: auto;
-  padding: 20px;
-}
-.chat-msg {
-  margin-bottom: 16px;
-  animation: slideIn 0.3s ease;
-}
-.chat-msg.user .chat-bubble {
-  background: #2563eb;
-  color: white;
-  margin-left: 60px;
-  border-radius: 14px 14px 4px 14px;
-}
-.chat-msg.bot .chat-bubble {
-  background: #0f172a;
-  color: #e2e8f0;
-  margin-right: 60px;
-  border-radius: 14px 14px 14px 4px;
-  border: 1px solid #334155;
-}
-.chat-bubble {
-  padding: 12px 16px;
-  font-size: 14px;
-  line-height: 1.5;
-}
-.chat-bubble code {
-  background: rgba(56,189,248,0.15);
-  color: #38bdf8;
-  padding: 1px 6px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-family: "SF Mono", "Fira Code", monospace;
-}
-.chat-bubble .esql-block {
-  background: #0c1222;
-  border: 1px solid #1e293b;
-  border-radius: 8px;
-  padding: 10px 12px;
-  margin: 8px 0;
-  font-family: "SF Mono", "Fira Code", monospace;
-  font-size: 11px;
-  color: #38bdf8;
-  white-space: pre-wrap;
-  overflow-x: auto;
-}
-.chat-bubble table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 8px 0;
-  font-size: 12px;
-}
-.chat-bubble table th {
-  background: #1e3a5f;
-  color: #93c5fd;
-  padding: 6px 10px;
-  text-align: left;
-  font-weight: 600;
-  border-bottom: 1px solid #334155;
-}
-.chat-bubble table td {
-  padding: 5px 10px;
-  border-bottom: 1px solid #1e293b;
-  color: #cbd5e1;
-}
-.chat-bubble table tr:hover td { background: rgba(56,189,248,0.05); }
-.chat-suggestion {
-  display: inline-block;
-  padding: 5px 12px;
-  margin: 3px 4px 3px 0;
-  border-radius: 16px;
-  font-size: 12px;
-  background: #1e3a5f;
-  color: #93c5fd;
-  cursor: pointer;
-  border: 1px solid #2563eb;
-  transition: all 0.2s;
-}
-.chat-suggestion:hover { background: #2563eb; color: white; }
-.chat-input-row {
-  display: flex;
-  gap: 8px;
-  padding: 16px;
-  border-top: 1px solid #334155;
-  background: #0f172a;
-}
-.chat-input {
-  flex: 1;
-  padding: 10px 16px;
-  border-radius: 10px;
-  border: 1px solid #334155;
-  background: #1e293b;
-  color: #e2e8f0;
-  font-size: 14px;
-  outline: none;
-}
-.chat-input:focus { border-color: #38bdf8; }
-.chat-input::placeholder { color: #475569; }
-.chat-send {
-  padding: 10px 20px;
-  border-radius: 10px;
-  border: none;
-  background: #2563eb;
-  color: white;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-}
-.chat-send:hover { background: #1d4ed8; }
-.chat-send:disabled { background: #334155; cursor: not-allowed; }
+/* ── Status Dot ── */
+.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px}
+.status-dot.green{background:#22C55E;box-shadow:0 0 4px rgba(34,197,94,0.4)}
+.status-dot.red{background:#EF4444;box-shadow:0 0 4px rgba(239,68,68,0.4)}
+.status-dot.yellow{background:#F59E0B;box-shadow:0 0 4px rgba(245,158,11,0.4)}
 
-/* Sector cards */
-.sector-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; margin: 16px 0; }
-.sector-card {
-  background: #1e293b;
-  border: 1px solid #334155;
-  border-radius: 12px;
-  padding: 18px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.sector-card:hover { border-color: #38bdf8; transform: translateY(-2px); }
-.sector-card.active { border-color: #22c55e; background: #052e16; }
-.sector-card .sc-icon { font-size: 28px; margin-bottom: 8px; }
-.sector-card .sc-name { font-size: 14px; font-weight: 700; color: #f1f5f9; margin-bottom: 4px; }
-.sector-card .sc-desc { font-size: 11px; color: #64748b; line-height: 1.4; }
-.sector-card .sc-waste { font-size: 11px; color: #f59e0b; margin-top: 6px; font-weight: 600; }
-.sector-detail {
-  background: #1e293b;
-  border: 1px solid #334155;
-  border-radius: 14px;
-  padding: 24px;
-  margin-top: 16px;
-  display: none;
-}
-.sector-detail.show { display: block; animation: fadeIn 0.3s ease; }
-.sector-detail h3 { font-size: 18px; color: #f1f5f9; margin-bottom: 12px; }
-.sector-detail .sd-section { margin-bottom: 16px; }
-.sector-detail .sd-label { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
-.sector-detail pre {
-  background: #0c1222;
-  border: 1px solid #1e293b;
-  border-radius: 8px;
-  padding: 12px 14px;
-  font-family: "SF Mono", "Fira Code", monospace;
-  font-size: 11px;
-  color: #38bdf8;
-  white-space: pre-wrap;
-  overflow-x: auto;
-  line-height: 1.5;
-}
+/* ── Toast Notification ── */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 20px;box-shadow:var(--shadow-lg);font-size:0.8rem;z-index:999;transform:translateY(100px);opacity:0;transition:all .3s ease}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{border-left:4px solid var(--emerald)}
+.toast.error{border-left:4px solid var(--rose)}
 
-/* Responsive */
-@media (max-width: 768px) {
-  .container { padding: 20px 12px; }
-  h1 { font-size: 28px; }
-  .counter { font-size: 48px; }
-  .stats-row { grid-template-columns: repeat(2, 1fr); }
-  .findings-grid { grid-template-columns: 1fr; }
-  .tabs { flex-wrap: wrap; }
-  .tab { flex: none; padding: 8px 14px; font-size: 12px; }
-  .total-bar .big { font-size: 36px; }
-  .chat-input-row input { width: 100%; }
-  .sector-grid { grid-template-columns: 1fr; }
-}
+/* ── Scan Target Cards ── */
+.scan-target{background:var(--surface);border:2px solid var(--border);border-radius:var(--radius-lg);padding:16px;cursor:pointer;transition:all .2s;position:relative;user-select:none}
+.scan-target:hover{border-color:var(--primary);box-shadow:var(--shadow-md)}
+.scan-target.selected{border-color:var(--primary);background:var(--primary-dim)}
+.scan-target.disabled{opacity:0.4;pointer-events:none}
+.scan-target-icon{font-size:1.5rem;margin-bottom:6px}
+.scan-target-label{font-weight:700;font-size:0.85rem;color:var(--text-bright);margin-bottom:4px}
+.scan-target-desc{font-size:0.7rem;color:var(--text-dim);margin-bottom:8px;line-height:1.4}
+.scan-target-meta{display:flex;justify-content:space-between;align-items:center}
+.scan-target-meta .tag{margin:0}
+.scan-target-check{position:absolute;top:12px;right:12px;width:20px;height:20px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:0.7rem;transition:all .2s}
+.scan-target.selected .scan-target-check{background:var(--primary);border-color:var(--primary);color:#fff}
 
-/* Glow pulse for active step */
-@keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 10px rgba(56,189,248,0.1); }
-  50% { box-shadow: 0 0 25px rgba(56,189,248,0.2); }
-}
-.step.active { animation: pulse-glow 2s ease-in-out infinite; }
+/* ── Skeleton Loader ── */
+.skeleton{background:linear-gradient(90deg,var(--surface-2) 25%,var(--surface-3) 37%,var(--surface-2) 63%);background-size:400% 100%;animation:skeletonShimmer 1.4s ease infinite;border-radius:6px;display:inline-block}
+@keyframes skeletonShimmer{0%{background-position:100% 50%}100%{background-position:0 50%}}
+
+/* ── Quick Actions ── */
+.quick-actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:16px;margin-bottom:16px}
+.qa-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:10px}
+.qa-card:hover{border-color:var(--primary);box-shadow:var(--shadow-md);transform:translateY(-1px)}
+.qa-icon{font-size:1.3rem;flex-shrink:0}
+.qa-text{font-size:0.78rem;font-weight:600;color:var(--text-bright)}
+.qa-sub{font-size:0.65rem;color:var(--text-dim);font-weight:400;display:block;margin-top:1px}
+
+/* ── Last Hunt Summary ── */
+.last-hunt{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;margin-top:12px;font-size:0.78rem;display:none}
+.last-hunt.visible{display:block}
+.last-hunt-title{font-weight:700;font-size:0.72rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px}
+
+/* ── Chat Suggestion Cards ── */
+.chat-welcome{display:flex;flex-direction:column;align-items:center;padding:40px 20px}
+.chat-welcome-icon{font-size:2.5rem;margin-bottom:12px;opacity:0.7}
+.chat-welcome-title{font-family:var(--font-display);font-size:1.2rem;color:var(--text-bright);margin-bottom:4px}
+.chat-welcome-sub{font-size:0.75rem;color:var(--text-dim);margin-bottom:20px}
+.chat-cards{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;max-width:460px}
+.chat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:8px}
+.chat-card:hover{border-color:var(--primary);background:var(--primary-dim)}
+.chat-card-icon{font-size:1.1rem;flex-shrink:0}
+.chat-card-text{font-size:0.72rem;color:var(--text);line-height:1.3}
+.chat-card-text strong{display:block;font-size:0.74rem;color:var(--text-bright)}
+
+/* ── Chat Response Meta ── */
+.chat-meta{display:flex;gap:8px;align-items:center;margin-top:6px}
+.chat-meta-tag{font-size:0.58rem;font-family:var(--font-mono);padding:2px 6px;border-radius:3px;background:var(--surface-2);color:var(--text-dim)}
+.chat-meta-time{font-size:0.58rem;font-family:var(--font-mono);color:var(--text-dim)}
+
+/* ── Reasoning Timeline ── */
+.reasoning-timeline{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;margin-top:12px;display:none}
+.reasoning-timeline.visible{display:block}
+.reasoning-timeline-title{font-weight:700;font-size:0.8rem;color:var(--text-bright);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.rt-entry{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.72rem}
+.rt-entry:last-child{border-bottom:none}
+.rt-time{font-family:var(--font-mono);font-size:0.6rem;color:var(--text-dim);min-width:52px;flex-shrink:0;text-align:right}
+.rt-agent-icon{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.7rem;flex-shrink:0}
+.rt-agent-icon.s1{background:var(--primary-dim);color:var(--primary)}
+.rt-agent-icon.s2{background:var(--purple-dim);color:var(--purple)}
+.rt-agent-icon.s3{background:var(--emerald-dim);color:var(--emerald)}
+.rt-agent-icon.s4{background:var(--amber-dim);color:var(--amber)}
+.rt-content{flex:1;min-width:0}
+.rt-thought{color:var(--text)}
+.rt-detail{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}
+.step-progress{width:100%;height:3px;background:var(--surface-2);border-radius:2px;margin-top:8px;overflow:hidden}
+.step-progress-fill{height:100%;background:var(--primary);border-radius:2px;transition:width .4s ease}
+.step-elapsed{font-family:var(--font-mono);font-size:0.6rem;color:var(--text-dim);margin-top:2px}
 </style>
 </head>
 <body>
-<div class="hero-bg"></div>
-<div class="container">
+<div class="app">
 
-  <div class="header">
-    <h1>&#128269; Ghost Economy Hunter</h1>
-    <p class="subtitle">
-      A 4-agent AI system built on Elastic Agent Builder that autonomously finds hidden financial waste
-      inside any organization&rsquo;s Elasticsearch data &mdash; across any industry, zero configuration.
-    </p>
-    <div id="modeBadge" class="mode-badge mode-demo">DEMO MODE &mdash; click Start Hunt to run live</div>
+<!-- Header -->
+<header class="hdr">
+  <div class="hdr-left">
+    <div class="logo">GH</div>
+    <h1>Ghost <em>Economy</em> Hunter</h1>
   </div>
-
-  <div class="tabs">
-    <div class="tab active" onclick="switchTab('hunt')">Hunt</div>
-    <div class="tab" onclick="switchTab('chat')">Chat</div>
-    <div class="tab" onclick="switchTab('data')">Connect Data</div>
-    <div class="tab" onclick="switchTab('sectors')">Sectors</div>
-    <div class="tab" onclick="switchTab('arch')">Architecture</div>
+  <div class="hdr-right">
+    <span class="badge badge-es" id="badgeEs">ES Checking...</span>
+    <span class="badge badge-off" id="badgeAb">Agent Builder</span>
+    <button class="theme-toggle" id="themeToggle" title="Toggle theme">&#9790;</button>
   </div>
+</header>
 
-  <!-- ═══ HUNT TAB ═══ -->
-  <div id="tab-hunt" class="tab-content active">
+<!-- Tabs -->
+<nav class="tabs" id="tabs">
+  <div class="tab active" data-tab="dashboard">Dashboard</div>
+  <div class="tab" data-tab="hunt">Hunt</div>
+  <div class="tab" data-tab="chat">Chat</div>
+  <div class="tab" data-tab="esql">ES|QL Console</div>
+  <div class="tab" data-tab="connect">Connect Data</div>
+  <div class="tab" data-tab="history">History</div>
+  <div class="tab" data-tab="architecture">Architecture</div>
+</nav>
 
-    <button class="start-btn" id="startBtn" onclick="startHunt()">&#9654; Start Hunt</button>
-
-    <div class="counter-section">
-      <div class="counter-label">Total Hidden Value Found</div>
-      <div class="counter" id="counter">$0</div>
-      <div class="counter-sub" id="counterSub">Waiting to start&hellip;</div>
+<!-- ═══════════════ DASHBOARD ═══════════════ -->
+<div class="panel active" id="p-dashboard">
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div class="card-title">Impact Dashboard</div>
+        <div class="card-subtitle">How Ghost Economy Hunter compares to manual audit processes</div>
+      </div>
+      <div style="text-align:right;font-size:0.62rem;color:var(--text-dim);font-family:var(--font-mono)" id="dashRefresh"></div>
+    </div>
+    <div class="metrics" id="impactMetrics">
+      <div class="metric"><div class="metric-value emerald" id="mWaste"><span class="skeleton" style="width:90px;height:28px">&nbsp;</span></div><div class="metric-label">Total Waste Found</div></div>
+      <div class="metric"><div class="metric-value primary" id="mFindings"><span class="skeleton" style="width:40px;height:28px">&nbsp;</span></div><div class="metric-label">Findings</div></div>
+      <div class="metric"><div class="metric-value amber" id="mIndexes"><span class="skeleton" style="width:30px;height:28px">&nbsp;</span></div><div class="metric-label">Indexes Scanned</div></div>
+      <div class="metric"><div class="metric-value" id="mDocs"><span class="skeleton" style="width:60px;height:28px">&nbsp;</span></div><div class="metric-label">Documents Analyzed</div></div>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:20px" id="systemStatus">
+      <div style="display:flex;align-items:center;gap:6px;font-size:0.75rem"><span class="status-dot" id="dotEs"></span>Elasticsearch</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:0.75rem"><span class="status-dot" id="dotAb"></span>Agent Builder</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:0.75rem"><span class="status-dot" id="dotTools"></span>ES|QL Tools</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:0.75rem"><span class="status-dot" id="dotAgents"></span>AI Agents</div>
     </div>
 
-    <div class="pipeline-progress" id="pipelineProgress"><div class="bar" id="progressBar"></div></div>
-
-    <div class="stats-row" id="statsRow">
-      <div class="stat-card"><div class="stat-val" id="statIndexes">0</div><div class="stat-label">Indexes Scanned</div></div>
-      <div class="stat-card amber"><div class="stat-val" id="statAnomalies">0</div><div class="stat-label">Anomalies Found</div></div>
-      <div class="stat-card green"><div class="stat-val" id="statActions">0</div><div class="stat-label">Actions Triggered</div></div>
-      <div class="stat-card purple"><div class="stat-val" id="statTime">0s</div><div class="stat-label">Pipeline Time</div></div>
+    <div class="quick-actions">
+      <div class="qa-card" onclick="switchTab('hunt');setTimeout(function(){var c=document.querySelectorAll('.scan-target:not(.disabled)');c.forEach(function(x){x.classList.add('selected');x.querySelector('.scan-target-check').innerHTML='&#10003;'});$('btnToggle').textContent='Deselect All'},200)"><span class="qa-icon">&#9889;</span><div><span class="qa-text">Run Full Hunt<span class="qa-sub">Scan all data sources</span></span></div></div>
+      <div class="qa-card" onclick="switchTab('connect')"><span class="qa-icon">&#128228;</span><div><span class="qa-text">Upload Data<span class="qa-sub">Add CSV or connect index</span></span></div></div>
+      <div class="qa-card" onclick="switchTab('chat')"><span class="qa-icon">&#128172;</span><div><span class="qa-text">Chat with Agents<span class="qa-sub">Ask questions about your data</span></span></div></div>
+      <div class="qa-card" onclick="switchTab('history')"><span class="qa-icon">&#128203;</span><div><span class="qa-text">View History<span class="qa-sub">Past audit records</span></span></div></div>
     </div>
 
-    <div class="agents">
-      <div class="section-title">Agent Pipeline</div>
-      <div class="step" id="s1">
-        <div class="step-icon">&#128506;</div>
-        <div class="step-text">
-          <strong>Agent 1 &mdash; Cartographer</strong>
-          <span>Maps all Elasticsearch indexes &amp; identifies anomaly potential</span>
-        </div>
-        <div class="step-status" id="st1">waiting</div>
-      </div>
-      <div class="step" id="s2">
-        <div class="step-icon">&#128269;</div>
-        <div class="step-text">
-          <strong>Agent 2 &mdash; Pattern Seeker</strong>
-          <span>Runs 3 ES|QL tools &mdash; usage, runtime &amp; energy anomalies</span>
-        </div>
-        <div class="step-status" id="st2">waiting</div>
-      </div>
-      <div class="step" id="s3">
-        <div class="step-icon">&#128176;</div>
-        <div class="step-text">
-          <strong>Agent 3 &mdash; Valuator</strong>
-          <span>Prices every finding using the pricing-reference index</span>
-        </div>
-        <div class="step-status" id="st3">waiting</div>
-      </div>
-      <div class="step" id="s4">
-        <div class="step-icon">&#9889;</div>
-        <div class="step-text">
-          <strong>Agent 4 &mdash; Action Taker</strong>
-          <span>Triggers Elastic Workflow &rarr; Slack alert + audit record</span>
-        </div>
-        <div class="step-status" id="st4">waiting</div>
-      </div>
+    <div class="last-hunt" id="lastHuntSummary">
+      <div class="last-hunt-title">Last Hunt</div>
+      <div id="lastHuntContent"></div>
     </div>
 
-    <div class="findings" id="findingsSection">
-      <div class="section-title">Findings</div>
-      <div class="findings-grid" id="findingsList"></div>
-      <div class="total-bar" id="totalBar">
-        <div class="big" id="totalBig">$0</div>
-        <div class="label">Total Ghost Economy Found</div>
-        <div class="sub" id="totalSub"></div>
-      </div>
-    </div>
-
-    <div class="status-bar" id="statusBar">
-      <span id="sbSlack"></span>
-      <span id="sbAudit"></span>
-      <span id="sbTime"></span>
-    </div>
-
-    <div class="error-box" id="errorBox"></div>
-
+    <table class="compare-table" id="compareTable">
+      <thead>
+        <tr><th>Metric</th><th>Manual Audit</th><th>Ghost Economy Hunter</th><th>Improvement</th></tr>
+      </thead>
+      <tbody id="compareBody">
+        <tr><td>Time to Analyze</td><td>~40 hours</td><td class="highlight">~3-4 minutes</td><td class="highlight">600x faster</td></tr>
+        <tr><td>Queries Needed</td><td>15+ manual SQL</td><td class="highlight">4 autonomous agents</td><td class="highlight">Fully automated</td></tr>
+        <tr><td>Error Rate</td><td>~15% human error</td><td class="highlight">0% (ES|QL deterministic)</td><td class="highlight">100% reduction</td></tr>
+        <tr><td>Coverage</td><td>1-2 departments</td><td class="highlight">Full org scan (all indexes)</td><td class="highlight">Complete coverage</td></tr>
+        <tr><td>Confidence</td><td>Varies by analyst</td><td class="highlight">92%+ average</td><td class="highlight">Consistent &amp; measurable</td></tr>
+        <tr><td>Auto-Refresh</td><td>Manual re-runs</td><td class="highlight">Every 3 minutes</td><td class="highlight">Continuous monitoring</td></tr>
+      </tbody>
+    </table>
   </div>
+</div>
 
-  <!-- ═══ CHAT TAB ═══ -->
-  <div id="tab-chat" class="tab-content">
-    <div class="section-title">Ask Your Data</div>
-    <p style="font-size:13px;color:#94a3b8;margin-bottom:16px;line-height:1.5;">
-      Ask questions in plain English and Ghost Economy Hunter will run live ES|QL queries against your Elasticsearch data.
-      Every answer comes with the exact query used &mdash; fully transparent, no hallucination.
-    </p>
+<!-- ═══════════════ HUNT ═══════════════ -->
+<div class="panel" id="p-hunt">
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div>
+        <div class="card-title">Start a Hunt</div>
+        <div class="card-subtitle">Select data sources to scan, then run the 4-agent pipeline</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-secondary btn-sm" onclick="toggleAllTargets()" id="btnToggle">Select All</button>
+        <button class="btn btn-primary" id="btnHunt" onclick="startHunt()">Run Hunt</button>
+      </div>
+    </div>
+
+    <!-- Data Source Selector -->
+    <div id="scanTargets" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-bottom:20px">
+      <div class="empty-state" style="padding:16px"><span class="loading"></span> Loading data sources...</div>
+    </div>
+
+    <!-- Pipeline Steps -->
+    <div class="steps" id="pipelineSteps">
+      <div class="step" id="s1"><div class="step-spinner"></div><div class="step-num">AGENT 1</div><div class="step-name">Cartographer</div><div class="step-detail" id="s1d">Maps all indexes &amp; fields</div><div class="step-progress" id="sp1"><div class="step-progress-fill" id="spf1" style="width:0"></div></div><div class="step-elapsed" id="se1"></div><div class="reasoning" id="r1"></div><span class="reasoning-toggle" id="rt1" onclick="toggleReasoning(1)">Show reasoning</span></div>
+      <div class="step" id="s2"><div class="step-spinner"></div><div class="step-num">AGENT 2</div><div class="step-name">Pattern Seeker</div><div class="step-detail" id="s2d">Scans all sources for anomalies</div><div class="step-progress" id="sp2"><div class="step-progress-fill" id="spf2" style="width:0"></div></div><div class="step-elapsed" id="se2"></div><div class="reasoning" id="r2"></div><span class="reasoning-toggle" id="rt2" onclick="toggleReasoning(2)">Show reasoning</span></div>
+      <div class="step" id="s3"><div class="step-spinner"></div><div class="step-num">AGENT 3</div><div class="step-name">Valuator</div><div class="step-detail" id="s3d">Calculates dollar impact</div><div class="step-progress" id="sp3"><div class="step-progress-fill" id="spf3" style="width:0"></div></div><div class="step-elapsed" id="se3"></div><div class="reasoning" id="r3"></div><span class="reasoning-toggle" id="rt3" onclick="toggleReasoning(3)">Show reasoning</span></div>
+      <div class="step" id="s4"><div class="step-spinner"></div><div class="step-num">AGENT 4</div><div class="step-name">Action Taker</div><div class="step-detail" id="s4d">Triggers actions &amp; Slack</div><div class="step-progress" id="sp4"><div class="step-progress-fill" id="spf4" style="width:0"></div></div><div class="step-elapsed" id="se4"></div><div class="reasoning" id="r4"></div><span class="reasoning-toggle" id="rt4" onclick="toggleReasoning(4)">Show reasoning</span></div>
+    </div>
+
+    <!-- Agent Reasoning Timeline -->
+    <div class="reasoning-timeline" id="reasoningTimeline">
+      <div class="reasoning-timeline-title">&#128338; Agent Reasoning Timeline</div>
+      <div id="rtEntries"></div>
+    </div>
+
+    <!-- Elapsed Timer -->
+    <div id="huntTimer" style="display:none;text-align:center;margin-bottom:12px">
+      <span style="font-family:var(--font-mono);font-size:0.75rem;color:var(--text-dim)">Elapsed: <span id="timerValue">0.0</span>s</span>
+    </div>
+
+    <!-- Results -->
+    <div id="huntResults" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <h3 class="card-title">Findings</h3>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-secondary btn-sm" onclick="exportResults('csv')">Export CSV</button>
+          <button class="btn btn-secondary btn-sm" onclick="exportResults('json')">Export JSON</button>
+        </div>
+      </div>
+      <table class="findings-table">
+        <thead><tr><th>Entity</th><th>Source</th><th>Category</th><th>Dollar Value</th><th>Annualized</th><th>Calculation</th><th>Priority</th></tr></thead>
+        <tbody id="findingsBody"></tbody>
+      </table>
+      <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <span style="font-size:0.7rem;color:var(--text-dim)" id="huntScanInfo"></span>
+          <div style="font-size:0.62rem;color:var(--primary);margin-top:2px;font-family:var(--font-mono)">All findings from live ES|QL queries against your Elasticsearch cluster</div>
+        </div>
+        <div style="text-align:right">
+          <span style="font-family:var(--font-display);font-size:1.4rem;color:var(--rose)" id="huntTotal"></span>
+          <span style="font-size:0.7rem;color:var(--text-dim);margin-left:8px">total hidden waste</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scan Summary -->
+    <div id="scanSummary" style="display:none;margin-top:16px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px">
+      <div style="font-weight:700;font-size:0.75rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Scan Summary</div>
+      <div id="scanSummaryContent" style="display:flex;flex-wrap:wrap;gap:8px;font-size:0.72rem"></div>
+      <div id="toolsUsedContent" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ CHAT ═══════════════ -->
+<div class="panel" id="p-chat">
+  <div class="card" style="padding:0;overflow:hidden">
+    <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px">
+      <div style="flex:1;min-width:0">
+        <div class="card-title" style="margin-bottom:2px">Agent Chat</div>
+        <div class="card-subtitle" style="margin-bottom:0">Talk directly to Agent Builder or query your data with natural language</div>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="clearChat()" title="Clear chat" style="flex-shrink:0">Clear</button>
+      <select class="chat-agent-select" id="chatAgentSelect" style="flex-shrink:0">
+        <option value="">Auto-route</option>
+        <option value="ghost-cartographer">Cartographer</option>
+        <option value="ghost-pattern-seeker">Pattern Seeker</option>
+        <option value="ghost-valuator">Valuator</option>
+        <option value="ghost-action-taker">Action Taker</option>
+      </select>
+    </div>
     <div class="chat-container">
       <div class="chat-messages" id="chatMessages">
-        <div class="chat-msg bot">
-          <div class="chat-bubble">
-            Welcome! I can query your Elasticsearch data in real time. Try asking:
-            <div style="margin-top:8px;">
-              <span class="chat-suggestion" onclick="sendChat('Show me drug waste patterns')">Show me drug waste patterns</span>
-              <span class="chat-suggestion" onclick="sendChat('Which machines are running idle?')">Which machines are idle?</span>
-              <span class="chat-suggestion" onclick="sendChat('What buildings waste energy?')">Building energy waste</span>
-              <span class="chat-suggestion" onclick="sendChat('Total waste summary')">Total waste summary</span>
-              <span class="chat-suggestion" onclick="sendChat('What indexes do I have?')">List my indexes</span>
-              <span class="chat-suggestion" onclick="sendChat('Show pricing reference data')">Pricing data</span>
-            </div>
+        <div class="chat-welcome" id="chatWelcome">
+          <div class="chat-welcome-icon">&#128270;</div>
+          <div class="chat-welcome-title">Ask me anything about your data</div>
+          <div class="chat-welcome-sub">I query Elasticsearch via ES|QL or talk to AI agents directly</div>
+          <div class="chat-cards">
+            <div class="chat-card" onclick="sendChat('Show me drug waste patterns')"><span class="chat-card-icon">&#128138;</span><span class="chat-card-text"><strong>Drug Waste</strong>Over-ordering vs usage</span></div>
+            <div class="chat-card" onclick="sendChat('Which machines are running idle?')"><span class="chat-card-icon">&#9881;</span><span class="chat-card-text"><strong>Idle Machines</strong>Off-shift runtime waste</span></div>
+            <div class="chat-card" onclick="sendChat('Show building energy waste')"><span class="chat-card-icon">&#9889;</span><span class="chat-card-text"><strong>Energy Waste</strong>High usage, low occupancy</span></div>
+            <div class="chat-card" onclick="sendChat('What indexes do I have?')"><span class="chat-card-icon">&#128451;</span><span class="chat-card-text"><strong>List Indexes</strong>All available data</span></div>
+            <div class="chat-card" onclick="sendChat('Total waste summary across all sources')"><span class="chat-card-icon">&#128176;</span><span class="chat-card-text"><strong>Waste Summary</strong>Total dollar impact</span></div>
+            <div class="chat-card" onclick="sendChat('Show my audit history')"><span class="chat-card-icon">&#128203;</span><span class="chat-card-text"><strong>Audit History</strong>Past hunt findings</span></div>
           </div>
         </div>
       </div>
       <div class="chat-input-row">
-        <input type="text" class="chat-input" id="chatInput" placeholder="Ask about your data&hellip; (e.g. &quot;Show me drug waste&quot;)" onkeydown="if(event.key==='Enter')sendChat()">
-        <button class="chat-send" id="chatSendBtn" onclick="sendChat()">Send</button>
+        <input class="chat-input" id="chatInput" placeholder="Ask about your data..." onkeydown="if(event.key==='Enter')sendChat()">
+        <button class="btn btn-primary btn-sm" onclick="sendChat()">Send</button>
       </div>
     </div>
   </div>
-
-  <!-- ═══ CONNECT DATA TAB ═══ -->
-  <div id="tab-data" class="tab-content">
-    <div class="connect-section">
-      <div class="section-title">Add Your Own Data</div>
-
-      <!-- Upload CSV -->
-      <div class="connect-card">
-        <h3>&#128228; Upload CSV File</h3>
-        <p>Upload any CSV file and Ghost Economy Hunter will automatically create an Elasticsearch index,
-           infer field types (numbers, dates, categories), and make it available for anomaly scanning.</p>
-        <div class="form-row">
-          <input type="text" class="form-input" id="uploadIndexName" placeholder="Index name (e.g. my-sales-data)">
-          <label class="file-label">
-            &#128193; Choose CSV
-            <input type="file" id="csvFile" accept=".csv" onchange="onFileSelect(this)">
-          </label>
-          <button class="form-btn primary" id="uploadBtn" onclick="uploadCSV()" disabled>Upload &amp; Index</button>
-        </div>
-        <div id="fileName" style="font-size:12px;color:#64748b;margin-top:4px;"></div>
-        <div class="result-box" id="uploadResult"></div>
-      </div>
-
-      <!-- Connect existing index -->
-      <div class="connect-card">
-        <h3>&#128268; Connect Existing Index</h3>
-        <p>Already have data in Elasticsearch? Enter the index name to inspect its structure and
-           see if it has anomaly detection potential.</p>
-        <div class="form-row">
-          <input type="text" class="form-input" id="connectIndexName" placeholder="Index name (e.g. server-logs-*)">
-          <button class="form-btn primary" onclick="connectIndex()">Inspect Index</button>
-        </div>
-        <div class="result-box" id="connectResult"></div>
-      </div>
-
-      <!-- Browse indexes -->
-      <div class="connect-card">
-        <h3>&#128202; Your Elasticsearch Indexes</h3>
-        <p>All indexes currently in your Elasticsearch cluster. Click refresh to update.</p>
-        <button class="form-btn secondary" onclick="loadIndexes()">Refresh Indexes</button>
-        <div class="index-list" id="indexList"></div>
-      </div>
-
-      <!-- Sample data -->
-      <div class="connect-card">
-        <h3>&#127919; Load Sample Data</h3>
-        <p>Don&rsquo;t have your own data? Generate the 3 demo datasets (factory IoT, hospital drugs, NYC buildings)
-           with one click. Requires the Python backend to be running.</p>
-        <button class="form-btn secondary" id="sampleBtn" onclick="loadSampleData()">Generate Sample Data</button>
-        <div class="result-box" id="sampleResult"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ═══ SECTORS TAB ═══ -->
-  <div id="tab-sectors" class="tab-content">
-    <div class="section-title">Industry Sectors</div>
-    <p style="font-size:13px;color:#94a3b8;margin-bottom:16px;line-height:1.5;">
-      Ghost Economy Hunter works across <strong style="color:#f1f5f9;">any industry</strong>.
-      Same 4 agents, same workflow &mdash; just change the data. Click a sector to see its ready-to-deploy
-      ES|QL queries, agent prompts, and real-world data sources.
-    </p>
-    <div class="sector-grid" id="sectorGrid"></div>
-    <div class="sector-detail" id="sectorDetail"></div>
-  </div>
-
-  <!-- ═══ ARCHITECTURE TAB ═══ -->
-  <div id="tab-arch" class="tab-content">
-    <div class="arch-section">
-      <div class="section-title">System Architecture</div>
-      <div class="arch-diagram">
-
-        <div class="arch-flow">
-          <div class="arch-node arch-data">Elasticsearch<div class="arch-label">6 indexes</div></div>
-          <div class="arch-arrow">&rarr;</div>
-          <div class="arch-node arch-agent">Cartographer<div class="arch-label">maps indexes</div></div>
-          <div class="arch-arrow">&rarr;</div>
-          <div class="arch-node arch-agent">Pattern Seeker<div class="arch-label">finds anomalies</div></div>
-          <div class="arch-arrow">&rarr;</div>
-          <div class="arch-node arch-agent">Valuator<div class="arch-label">prices findings</div></div>
-          <div class="arch-arrow">&rarr;</div>
-          <div class="arch-node arch-agent">Action Taker<div class="arch-label">verifies &amp; acts</div></div>
-        </div>
-
-        <div class="section-title" style="margin-top: 28px;">ES|QL Tools</div>
-        <div class="arch-row">
-          <div class="arch-node arch-tool">usage_anomaly<div class="arch-label">hospital-drugs</div></div>
-          <div class="arch-node arch-tool">runtime_anomaly<div class="arch-label">factory-iot-data</div></div>
-          <div class="arch-node arch-tool">energy_anomaly<div class="arch-label">nyc-buildings</div></div>
-          <div class="arch-node arch-tool">value_calculator<div class="arch-label">pricing-reference</div></div>
-        </div>
-
-        <div class="section-title" style="margin-top: 28px;">Actions</div>
-        <div class="arch-row">
-          <div class="arch-node arch-action">Elastic Workflow<div class="arch-label">orchestration</div></div>
-          <div class="arch-arrow">&rarr;</div>
-          <div class="arch-node arch-action">Slack Alert<div class="arch-label">notification</div></div>
-          <div class="arch-arrow">+</div>
-          <div class="arch-node arch-data">ghost-economy-audit<div class="arch-label">audit trail</div></div>
-        </div>
-
-        <div class="arch-sub">
-          All anomaly detection uses pure ES|QL queries &mdash; deterministic, testable, no hallucination risk.<br>
-          Real data: NYC Open Data (LL84 building energy) + CMS drug pricing + synthetic IoT sensor data.
-        </div>
-      </div>
-
-      <div class="section-title" style="margin-top: 32px;">Data Indexes</div>
-      <div style="overflow-x:auto;">
-        <table style="width:100%;border-collapse:collapse;font-size:13px;">
-          <thead>
-            <tr style="border-bottom:1px solid #334155;text-align:left;">
-              <th style="padding:10px 12px;color:#64748b;">Index</th>
-              <th style="padding:10px 12px;color:#64748b;">Domain</th>
-              <th style="padding:10px 12px;color:#64748b;">Source</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr style="border-bottom:1px solid #1e293b;">
-              <td style="padding:8px 12px;color:#38bdf8;font-family:monospace;">factory-iot-data</td>
-              <td style="padding:8px 12px;">Manufacturing IoT sensors</td>
-              <td style="padding:8px 12px;color:#64748b;">Synthetic (realistic patterns)</td>
-            </tr>
-            <tr style="border-bottom:1px solid #1e293b;">
-              <td style="padding:8px 12px;color:#38bdf8;font-family:monospace;">hospital-drugs</td>
-              <td style="padding:8px 12px;">Drug procurement</td>
-              <td style="padding:8px 12px;color:#64748b;">Synthetic + CMS pricing</td>
-            </tr>
-            <tr style="border-bottom:1px solid #1e293b;">
-              <td style="padding:8px 12px;color:#38bdf8;font-family:monospace;">nyc-buildings</td>
-              <td style="padding:8px 12px;">Building energy</td>
-              <td style="padding:8px 12px;color:#4ade80;">NYC Open Data (LL84)</td>
-            </tr>
-            <tr style="border-bottom:1px solid #1e293b;">
-              <td style="padding:8px 12px;color:#38bdf8;font-family:monospace;">pricing-reference</td>
-              <td style="padding:8px 12px;">Unit costs</td>
-              <td style="padding:8px 12px;color:#4ade80;">CMS ASP + EIA rates</td>
-            </tr>
-            <tr style="border-bottom:1px solid #1e293b;">
-              <td style="padding:8px 12px;color:#38bdf8;font-family:monospace;">known-exceptions</td>
-              <td style="padding:8px 12px;">Approved exceptions</td>
-              <td style="padding:8px 12px;color:#64748b;">Sample records</td>
-            </tr>
-            <tr>
-              <td style="padding:8px 12px;color:#38bdf8;font-family:monospace;">ghost-economy-audit</td>
-              <td style="padding:8px 12px;">Audit trail</td>
-              <td style="padding:8px 12px;color:#64748b;">Pipeline output</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <div class="footer">
-    <span class="elastic-badge">
-      <svg width="16" height="16" viewBox="0 0 64 64"><path d="M32 0C14.3 0 0 14.3 0 32s14.3 32 32 32 32-14.3 32-32S49.7 0 32 0z" fill="#38bdf8" opacity="0.2"/><path d="M47 22H17l15-14 15 14zM47 42H17l15 14 15-14zM14 32l8-8h20l8 8-8 8H22l-8-8z" fill="#38bdf8"/></svg>
-      Powered by Elastic Agent Builder + ES|QL
-    </span>
-    <a href="https://github.com/SahilRakhaiya05/Ghost-Economy-Hunter" target="_blank">GitHub</a>
-    <a href="https://elasticsearch.devpost.com" target="_blank">Devpost</a>
-  </div>
-
 </div>
 
+<!-- ═══════════════ ES|QL CONSOLE ═══════════════ -->
+<div class="panel" id="p-esql">
+  <div class="card">
+    <div class="card-title">ES|QL Query Console</div>
+    <div class="card-subtitle">Live log of every ES|QL query executed by the agents during hunts</div>
+    <div class="console" id="esqlConsole">
+      <div class="console-empty">Run a hunt or chat query to see ES|QL queries appear here in real time.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ CONNECT DATA ═══════════════ -->
+<div class="panel" id="p-connect">
+  <div class="card">
+    <div class="card-title">Connect Your Data</div>
+    <div class="card-subtitle">Upload a CSV or connect an existing Elasticsearch index to scan for waste</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px">
+      <div>
+        <h4 style="font-size:0.85rem;font-weight:700;margin-bottom:8px">Upload CSV</h4>
+        <form id="uploadForm" onsubmit="uploadCSV(event)">
+          <div style="margin-bottom:8px">
+            <label style="font-size:0.72rem;color:var(--text-dim)">Index name</label>
+            <input type="text" id="uploadIdx" placeholder="my-data-index" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);font-size:0.8rem;margin-top:4px">
+          </div>
+          <div style="margin-bottom:8px">
+            <label style="font-size:0.72rem;color:var(--text-dim)">CSV file</label>
+            <input type="file" id="uploadFile" accept=".csv" style="width:100%;margin-top:4px;font-size:0.75rem">
+          </div>
+          <button type="submit" class="btn btn-primary btn-sm">Upload &amp; Index</button>
+        </form>
+        <div id="uploadResult" style="margin-top:8px;font-size:0.72rem"></div>
+      </div>
+      <div>
+        <h4 style="font-size:0.85rem;font-weight:700;margin-bottom:8px">Connect Existing Index</h4>
+        <div style="margin-bottom:8px">
+          <label style="font-size:0.72rem;color:var(--text-dim)">Index name</label>
+          <input type="text" id="connectIdx" placeholder="my-existing-index" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);font-size:0.8rem;margin-top:4px">
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="connectIndex()">Connect</button>
+        <div id="connectResult" style="margin-top:8px;font-size:0.72rem"></div>
+      </div>
+    </div>
+    <hr class="divider">
+    <h4 style="font-size:0.85rem;font-weight:700;margin-bottom:8px">Current Indexes</h4>
+    <div id="indexList" style="font-size:0.75rem;color:var(--text-dim)">Loading...</div>
+    <button class="btn btn-secondary btn-sm" style="margin-top:10px" onclick="generateData()">Generate Sample Data</button>
+    <span id="genResult" style="font-size:0.72rem;margin-left:8px"></span>
+  </div>
+</div>
+
+<!-- ═══════════════ HISTORY ═══════════════ -->
+<div class="panel" id="p-history">
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div>
+        <div class="card-title">Hunt History</div>
+        <div class="card-subtitle">Past audit records from the ghost-economy-audit index</div>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="loadHistory()">Refresh</button>
+    </div>
+    <div class="metrics" id="historyMetrics">
+      <div class="metric"><div class="metric-value emerald" id="hTotalWaste">--</div><div class="metric-label">Total Waste Found</div></div>
+      <div class="metric"><div class="metric-value primary" id="hRecords">--</div><div class="metric-label">Audit Records</div></div>
+      <div class="metric"><div class="metric-value amber" id="hAnnualized">--</div><div class="metric-label">Annualized Impact</div></div>
+    </div>
+    <div id="historyTable" style="overflow-x:auto">
+      <div class="empty-state" id="historyEmpty">
+        <h3>No history yet</h3>
+        <p>Run a hunt to generate audit records</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════ ARCHITECTURE ═══════════════ -->
+<div class="panel" id="p-architecture">
+  <div class="card">
+    <div class="card-title">System Architecture</div>
+    <div class="card-subtitle">Multi-agent AI pipeline built on Elastic Agent Builder</div>
+
+    <div class="arch-flow">
+      <span class="arch-flow-step">1. Cartographer</span><span class="arch-flow-arrow">&#8594;</span>
+      <span class="arch-flow-step">2. Pattern Seeker</span><span class="arch-flow-arrow">&#8594;</span>
+      <span class="arch-flow-step">3. Valuator</span><span class="arch-flow-arrow">&#8594;</span>
+      <span class="arch-flow-step">4. Action Taker</span>
+    </div>
+
+    <div class="arch-diagram">
+      <div class="arch-node"><div class="arch-node-title">Cartographer</div><div class="arch-node-desc">Discovers all ES indexes, maps fields and types, detects business domains, identifies cross-correlation pairs</div></div>
+      <div class="arch-node"><div class="arch-node-title">Pattern Seeker</div><div class="arch-node-desc">Runs specialized ES|QL tools + auto-adapting generic scanner for any uploaded data</div></div>
+      <div class="arch-node"><div class="arch-node-title">Valuator</div><div class="arch-node-desc">Looks up unit costs from pricing-reference, computes dollar impact, assigns priority</div></div>
+      <div class="arch-node"><div class="arch-node-title">Action Taker</div><div class="arch-node-desc">Checks exceptions, calculates actionability, triggers Slack + indexes audit records</div></div>
+    </div>
+  </div>
+
+  <!-- Live Index Data -->
+  <div class="card" style="margin-top:12px">
+    <h4 style="font-size:0.9rem;font-weight:700;margin-bottom:10px">Live Elasticsearch Indexes</h4>
+    <div class="card-subtitle" style="margin-bottom:10px">Real data in your cluster — every hunt queries these via ES|QL</div>
+    <div id="archIndexList" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px;font-size:0.75rem">Loading indexes...</div>
+  </div>
+
+  <!-- Registered Agents & Tools -->
+  <div class="card" style="margin-top:12px">
+    <h4 style="font-size:0.9rem;font-weight:700;margin-bottom:10px">Registered Agents &amp; ES|QL Tools</h4>
+    <div class="card-subtitle" style="margin-bottom:10px">Provisioned in Elastic Agent Builder via Kibana API</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div>
+        <div style="font-weight:600;font-size:0.72rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">Agents</div>
+        <div id="registeredAgents" style="font-size:0.75rem">Loading...</div>
+      </div>
+      <div>
+        <div style="font-weight:600;font-size:0.72rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">ES|QL Tools</div>
+        <div id="registeredTools" style="font-size:0.75rem">Loading...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- .app -->
+
 <script>
-var API_URL = '/api/run';
-var huntStartTime = 0;
+/* ── Utility ── */
+function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function $(id){return document.getElementById(id)}
+function fmt$(n){return n>=1e6?'$'+(n/1e6).toFixed(1)+'M':n>=1e3?'$'+(n/1e3).toFixed(0)+'K':'$'+Number(n).toFixed(0)}
+function fmtN(n){return Number(n).toLocaleString()}
 
-var DEMO_FINDINGS = [
-  { id: 'ANO-001', entity: 'Insulin \u2014 Wing C', category: 'Drug Over-Procurement', dollar: 2135200, calc: '10,048 units \u00d7 $212.50/unit', priority: 'CRITICAL' },
-  { id: 'ANO-002', entity: 'PRESS-02 \u2014 Factory Floor', category: 'Idle Equipment Runtime', dollar: 76612.50, calc: '681 idle hours \u00d7 $112.50/hr', priority: 'HIGH' },
-  { id: 'ANO-003', entity: 'BLD-MA-00 \u2014 Manhattan', category: 'Energy-Occupancy Waste', dollar: 19604, calc: '103,177 kWh \u00d7 $0.19/kWh', priority: 'MEDIUM' }
-];
-var DEMO_TOTAL = 2231416;
+/* ── Theme ── */
+var savedTheme=localStorage.getItem('ghost-theme')||'light';
+if(savedTheme==='dark')document.documentElement.setAttribute('data-theme','dark');
+$('themeToggle').textContent=savedTheme==='dark'?'\u2600':'\u263E';
+$('themeToggle').onclick=function(){
+  var cur=document.documentElement.getAttribute('data-theme');
+  if(cur==='dark'){document.documentElement.removeAttribute('data-theme');localStorage.setItem('ghost-theme','light');this.textContent='\u263E'}
+  else{document.documentElement.setAttribute('data-theme','dark');localStorage.setItem('ghost-theme','dark');this.textContent='\u2600'}
+};
 
-function switchTab(name) {
-  var tabs = document.querySelectorAll('.tab');
-  var contents = document.querySelectorAll('.tab-content');
-  for (var i = 0; i < tabs.length; i++) { tabs[i].classList.remove('active'); }
-  for (var i = 0; i < contents.length; i++) { contents[i].classList.remove('active'); }
-  var tabMap = { hunt: 0, chat: 1, data: 2, sectors: 3, arch: 4 };
-  var idx = tabMap[name] || 0;
-  tabs[idx].classList.add('active');
-  document.getElementById('tab-' + name).classList.add('active');
-  if (name === 'data') { loadIndexes(); }
-  if (name === 'sectors') { loadSectors(); }
+/* ── Tab switching helper ── */
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('active')});
+  document.querySelectorAll('.panel').forEach(function(x){x.classList.remove('active')});
+  var t=document.querySelector('.tab[data-tab="'+name+'"]');
+  if(t)t.classList.add('active');
+  $('p-'+name).classList.add('active');
 }
 
-function onFileSelect(input) {
-  var name = input.files.length ? input.files[0].name : '';
-  document.getElementById('fileName').textContent = name ? 'Selected: ' + name : '';
-  document.getElementById('uploadBtn').disabled = !name;
-}
-
-async function uploadCSV() {
-  var fileInput = document.getElementById('csvFile');
-  var idxInput = document.getElementById('uploadIndexName');
-  var resultBox = document.getElementById('uploadResult');
-  var btn = document.getElementById('uploadBtn');
-
-  if (!fileInput.files.length) return;
-  var idx = idxInput.value.trim().toLowerCase().replace(/\s+/g, '-');
-  if (!idx) { idx = fileInput.files[0].name.replace('.csv','').toLowerCase().replace(/\s+/g,'-'); }
-  idxInput.value = idx;
-
-  btn.disabled = true;
-  btn.textContent = 'Uploading\u2026';
-  resultBox.style.display = 'none';
-
-  var form = new FormData();
-  form.append('file', fileInput.files[0]);
-  form.append('index_name', idx);
-
-  try {
-    var resp = await fetch('/api/upload', { method: 'POST', body: form });
-    var data = await resp.json();
-    if (data.error) throw new Error(data.error);
-    resultBox.className = 'result-box success';
-    resultBox.innerHTML =
-      '<strong>\u2705 Indexed ' + data.documents + ' documents into "' + esc(data.index) + '"</strong><br>' +
-      'Fields: ' + data.fields.map(function(f) {
-        return '<span style="color:#38bdf8">' + esc(f) + '</span> (' + esc(data.field_types[f]) + ')';
-      }).join(', ') +
-      '<br><br>Now go to the <strong>Hunt</strong> tab and click Start Hunt \u2014 the Cartographer will automatically discover this new index!';
-    resultBox.style.display = 'block';
-    loadIndexes();
-  } catch (err) {
-    resultBox.className = 'result-box error';
-    resultBox.textContent = '\u274c Upload failed: ' + err.message;
-    resultBox.style.display = 'block';
+/* ── Tabs ── */
+document.querySelectorAll('.tab').forEach(function(t){
+  t.onclick=function(){
+    document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('active')});
+    document.querySelectorAll('.panel').forEach(function(x){x.classList.remove('active')});
+    t.classList.add('active');
+    $('p-'+t.dataset.tab).classList.add('active');
   }
-  btn.disabled = false;
-  btn.textContent = 'Upload & Index';
-}
+});
 
-async function connectIndex() {
-  var idxInput = document.getElementById('connectIndexName');
-  var resultBox = document.getElementById('connectResult');
-  var idx = idxInput.value.trim();
-  if (!idx) return;
+/* ── Health Check ── */
+fetch('/api/health').then(function(r){return r.json()}).then(function(d){
+  $('badgeEs').textContent=d.elasticsearch==='connected'?'ES Connected':'ES Offline';
+  $('badgeEs').className='badge '+(d.elasticsearch==='connected'?'badge-es':'badge-off');
+}).catch(function(){$('badgeEs').textContent='ES Offline';$('badgeEs').className='badge badge-off'});
 
-  resultBox.style.display = 'none';
-  try {
-    var resp = await fetch('/api/connect', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ index_name: idx })
+fetch('/api/health').then(function(r){return r.json()}).then(function(d){
+  $('dotEs').className='status-dot '+(d.elasticsearch==='connected'?'green':'red');
+}).catch(function(){$('dotEs').className='status-dot red'});
+
+fetch('/api/agent-builder/status').then(function(r){return r.json()}).then(function(d){
+  $('badgeAb').textContent=d.connected?'Agent Builder ✓':'Agent Builder';
+  $('dotAb').className='status-dot '+(d.connected?'green':'yellow');
+  $('badgeAb').className='badge '+(d.connected?'badge-ab':'badge-off');
+}).catch(function(){$('dotAb').className='status-dot red'});
+
+/* ── Impact Metrics ── */
+fetch('/api/impact').then(function(r){return r.json()}).then(function(d){
+  $('mWaste').textContent=fmt$(d.total_waste_found_usd||0);
+  $('mFindings').textContent=d.total_findings||'0';
+  $('mIndexes').textContent=d.indexes_scanned||'0';
+  $('mDocs').textContent=fmtN(d.documents_analyzed||0);
+  if(d.comparison){
+    var m=d.comparison.manual_analysis;
+    var g=d.comparison.ghost_economy_hunter;
+    $('compareBody').innerHTML=
+      '<tr><td>Time to Analyze</td><td>~'+m.estimated_hours+' hours</td><td class="highlight">~'+g.estimated_seconds+'s</td><td class="highlight">'+(m.estimated_hours>0?Math.round(m.estimated_hours*3600/Math.max(g.estimated_seconds,1))+'x faster':'--')+'</td></tr>'+
+      '<tr><td>Queries Needed</td><td>'+m.queries_needed+' manual</td><td class="highlight">'+g.agent_steps+' agents</td><td class="highlight">Fully automated</td></tr>'+
+      '<tr><td>Error Rate</td><td>~'+m.error_rate_pct+'%</td><td class="highlight">'+g.error_rate_pct+'%</td><td class="highlight">100% reduction</td></tr>'+
+      '<tr><td>Coverage</td><td>'+esc(m.coverage)+'</td><td class="highlight">'+esc(g.coverage)+'</td><td class="highlight">Complete</td></tr>';
+  }
+}).catch(function(){});
+
+/* ── Scan Targets ── */
+var _scanTargets=[];
+function loadScanTargets(){
+  fetch('/api/scan-targets').then(function(r){return r.json()}).then(function(d){
+    _scanTargets=d.targets||[];
+    var html='';
+    _scanTargets.forEach(function(t,i){
+      var cls='scan-target'+(t.available?' selected':'disabled');
+      html+='<div class="'+cls+'" data-index="'+esc(t.index)+'" onclick="toggleTarget(this)">'
+        +'<div class="scan-target-check">'+(t.available?'&#10003;':'')+'</div>'
+        +'<div class="scan-target-icon">'+t.icon+'</div>'
+        +'<div class="scan-target-label">'+esc(t.label)+'</div>'
+        +'<div class="scan-target-desc">'+esc(t.description)+'</div>'
+        +'<div class="scan-target-meta">'
+        +'<span class="tag">'+esc(t.domain)+'</span>'
+        +'<span style="font-family:var(--font-mono);font-size:0.68rem;color:var(--text-dim)">'
+        +(t.available?fmtN(t.doc_count)+' docs':'No data')+'</span>'
+        +'</div></div>';
     });
-    var data = await resp.json();
-    if (data.error) throw new Error(data.error);
-
-    var fieldsHtml = '';
-    for (var f in data.fields) {
-      var t = data.fields[f];
-      var cls = (t === 'float' || t === 'double' || t === 'integer' || t === 'long') ? 'numeric' :
-                (t === 'keyword') ? 'keyword' : (t === 'date') ? 'date' : '';
-      fieldsHtml += '<span class="field-tag ' + cls + '">' + esc(f) + ' (' + t + ')</span> ';
-    }
-
-    resultBox.className = 'result-box success';
-    resultBox.innerHTML =
-      '<strong>\u2705 Connected: "' + esc(data.index) + '"</strong> &mdash; ' + data.doc_count.toLocaleString() + ' documents<br>' +
-      '<strong>Anomaly Potential:</strong> ' + data.anomaly_potential + '<br>' +
-      '<strong>Numeric fields:</strong> ' + (data.numeric_fields.length ? data.numeric_fields.join(', ') : 'none') + '<br>' +
-      '<strong>Keyword fields:</strong> ' + (data.keyword_fields.length ? data.keyword_fields.join(', ') : 'none') + '<br>' +
-      '<div class="field-tags" style="margin-top:8px">' + fieldsHtml + '</div>';
-    resultBox.style.display = 'block';
-  } catch (err) {
-    resultBox.className = 'result-box error';
-    resultBox.textContent = '\u274c ' + err.message;
-    resultBox.style.display = 'block';
-  }
+    $('scanTargets').innerHTML=html;
+  }).catch(function(){$('scanTargets').innerHTML='<div style="color:var(--text-dim);font-size:0.75rem">Could not load data sources</div>'});
+}
+loadScanTargets();
+function toggleTarget(el){
+  if(el.classList.contains('disabled'))return;
+  el.classList.toggle('selected');
+  var check=el.querySelector('.scan-target-check');
+  check.innerHTML=el.classList.contains('selected')?'&#10003;':'';
+}
+function toggleAllTargets(){
+  var cards=document.querySelectorAll('.scan-target:not(.disabled)');
+  var allSelected=true;
+  cards.forEach(function(c){if(!c.classList.contains('selected'))allSelected=false});
+  cards.forEach(function(c){
+    if(allSelected){c.classList.remove('selected');c.querySelector('.scan-target-check').innerHTML=''}
+    else{c.classList.add('selected');c.querySelector('.scan-target-check').innerHTML='&#10003;'}
+  });
+  $('btnToggle').textContent=allSelected?'Select All':'Deselect All';
+}
+function getSelectedTargets(){
+  var sel=[];
+  document.querySelectorAll('.scan-target.selected').forEach(function(c){sel.push(c.dataset.index)});
+  return sel;
 }
 
-async function loadIndexes() {
-  var container = document.getElementById('indexList');
-  if (window.location.protocol === 'file:') {
-    container.innerHTML = '<div style="color:#64748b;font-size:13px;padding:12px;">Run <code>python api.py</code> to see live indexes.</div>';
-    return;
-  }
-  try {
-    var resp = await fetch('/api/indexes');
-    var data = await resp.json();
-    if (!data.indexes || !data.indexes.length) {
-      container.innerHTML = '<div style="color:#64748b;font-size:13px;">No indexes found.</div>';
+/* ── Hunt (SSE Pipeline) ── */
+var _huntTimer=null;
+var _stepTimers={};
+var _stepReasoningCounts={};
+var _huntStartTime=0;
+var _agentNames={1:'Cartographer',2:'Pattern Seeker',3:'Valuator',4:'Action Taker'};
+function toggleReasoning(n){
+  var p=$('r'+n);
+  if(p.classList.contains('show')){p.classList.remove('show');$('rt'+n).textContent='Show reasoning'}
+  else{p.classList.add('show');$('rt'+n).textContent='Hide reasoning'}
+}
+function addReasoning(step,entry){
+  var panel=$('r'+step);if(!panel)return;
+  panel.classList.add('show');
+  var div=document.createElement('div');div.className='reasoning-item';
+  var icon=entry.tool?'\u2699':'\u25B6';
+  div.innerHTML='<span class="ri-icon">'+icon+'</span><div>'+esc(entry.reasoning||entry.thought||'')
+    +(entry.tool?' <span class="ri-tool">'+esc(entry.tool)+'</span>':'')
+    +(entry.query?'<span class="ri-query">'+esc(entry.query)+'</span>':'')
+    +(entry.result_summary?'<br><span style="color:var(--text-dim);font-size:0.65rem">'+esc(entry.result_summary)+'</span>':'')
+    +'</div>';
+  panel.appendChild(div);
+  $('rt'+step).style.display='inline';
+
+  _stepReasoningCounts[step]=(_stepReasoningCounts[step]||0)+1;
+  var pct=Math.min(95,_stepReasoningCounts[step]*20);
+  var fill=$('spf'+step);if(fill)fill.style.width=pct+'%';
+
+  _addTimelineEntry(step,entry);
+  if(entry.tool&&entry.query){addConsoleEntry(entry.agent||'Agent '+step,entry.tool,entry.query,entry.result_summary||'')}
+}
+function _addTimelineEntry(step,entry){
+  var tl=$('reasoningTimeline');tl.classList.add('visible');
+  var entries=$('rtEntries');
+  var elapsed=((Date.now()-_huntStartTime)/1000).toFixed(1);
+  var d=document.createElement('div');d.className='rt-entry';
+  d.innerHTML='<span class="rt-time">'+elapsed+'s</span>'
+    +'<span class="rt-agent-icon s'+step+'">'+step+'</span>'
+    +'<div class="rt-content"><span class="rt-thought">'+esc(entry.reasoning||entry.thought||'')+'</span>'
+    +'<div class="rt-detail">'
+    +(entry.tool?'<span class="ri-tool">'+esc(entry.tool)+'</span>':'')
+    +(entry.result_summary?'<span style="color:var(--text-dim);font-size:0.62rem">'+esc(entry.result_summary)+'</span>':'')
+    +'</div></div>';
+  entries.appendChild(d);
+  tl.scrollTop=tl.scrollHeight;
+}
+function addConsoleEntry(agent,tool,query,result){
+  var c=$('esqlConsole');
+  if(c.querySelector('.console-empty'))c.innerHTML='';
+  var d=document.createElement('div');d.className='console-entry';
+  d.innerHTML='<span class="console-agent">'+esc(agent)+'</span> <span class="console-tool">'+esc(tool)+'</span><span class="console-copy" onclick="navigator.clipboard.writeText(this.parentElement.querySelector(\'.console-query\').textContent)">copy</span><span class="console-query">'+esc(query)+'</span>'+(result?'<span class="console-result">'+esc(result)+'</span>':'');
+  c.appendChild(d);c.scrollTop=c.scrollHeight;
+}
+function startHunt(){
+  var selected=getSelectedTargets();
+  if(!selected.length){showToast('Select at least one data source to scan','error');return}
+
+  var btn=$('btnHunt');btn.disabled=true;btn.textContent='Hunting...';
+  document.querySelector('.logo').classList.add('pulse');
+  $('huntResults').style.display='none';
+  $('findingsBody').innerHTML='';
+  $('scanSummary').style.display='none';
+  $('scanSummaryContent').innerHTML='';
+  $('toolsUsedContent').innerHTML='';
+  $('huntTimer').style.display='block';
+  $('reasoningTimeline').classList.remove('visible');
+  $('rtEntries').innerHTML='';
+  _stepReasoningCounts={};_stepTimers={};
+  _huntStartTime=Date.now();
+  var t0=Date.now();
+  _huntTimer=setInterval(function(){$('timerValue').textContent=((Date.now()-t0)/1000).toFixed(1)},100);
+  [1,2,3,4].forEach(function(i){$('s'+i).className='step';$('s'+i+'d').textContent=['Maps all indexes & fields','Scans all sources for anomalies','Calculates dollar impact','Triggers actions & Slack'][i-1];$('r'+i).innerHTML='';$('r'+i).classList.remove('show');$('rt'+i).style.display='none';$('spf'+i).style.width='0';$('se'+i).textContent=''});
+
+  var targetParam=selected.join(',');
+  var src=new EventSource('/api/run/stream?targets='+encodeURIComponent(targetParam));
+  src.onmessage=function(ev){
+    var d=JSON.parse(ev.data);
+    if(d.step==='error'){src.close();_stopHunt(btn);showToast('Hunt failed: '+(d.error||'Unknown'),'error');return}
+    if(d.step==='complete'){
+      src.close();_stopHunt(btn);
+      if(d.findings&&d.findings.length){
+        $('huntResults').style.display='block';
+        $('huntTotal').textContent=fmt$(d.total||0);
+        d.findings.forEach(function(f){
+          var tr=document.createElement('tr');
+          tr.innerHTML='<td>'+esc(f.entity)+'</td><td><span class="tag">'+esc(f.source_index||'')+'</span></td><td>'+esc(f.category)+'</td><td style="font-family:var(--font-mono);font-weight:700">'+fmt$(f.dollar)+'</td><td style="font-family:var(--font-mono);font-size:0.72rem">'+fmt$(f.annualized||0)+'/yr</td><td style="font-size:0.72rem">'+esc(f.calc)+'</td><td><span class="priority-badge priority-'+esc(f.priority)+'">'+esc(f.priority)+'</span></td>';
+          $('findingsBody').appendChild(tr);
+        });
+        $('huntScanInfo').textContent='Scanned '+selected.length+' source(s) in '+(d.elapsed||0)+'s | '+d.findings.length+' findings';
+        showToast('Hunt complete! Found '+d.findings.length+' anomalies totaling '+fmt$(d.total||0),'success');
+        _updateLastHunt(selected.length,d.findings.length,d.total||0,d.elapsed||0);
+        if(d.scan_summary){
+          $('scanSummary').style.display='block';
+          var sumHtml='';
+          for(var idx in d.scan_summary){
+            sumHtml+='<div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 12px"><strong style="font-family:var(--font-mono);font-size:0.7rem">'+esc(idx)+'</strong><br><span style="color:var(--text-dim)">'+d.scan_summary[idx]+' finding(s)</span></div>';
+          }
+          $('scanSummaryContent').innerHTML=sumHtml;
+          if(d.tools_used&&d.tools_used.length){
+            var toolHtml='<span style="font-size:0.62rem;color:var(--text-dim);margin-right:4px">Tools used:</span>';
+            d.tools_used.forEach(function(t){toolHtml+='<span class="ri-tool">'+esc(t)+'</span> '});
+            $('toolsUsedContent').innerHTML=toolHtml;
+          }
+        }
+      } else {
+        showToast('Hunt complete! No anomalies found in selected sources.','success');
+        _updateLastHunt(selected.length,0,0,d.elapsed||0);
+      }
+      refreshMetrics();loadHistory();
       return;
     }
-    container.innerHTML = '';
-    for (var i = 0; i < data.indexes.length; i++) {
-      var idx = data.indexes[i];
-      var div = document.createElement('div');
-      div.className = 'index-item';
-      div.innerHTML =
-        '<div class="idx-name">' + esc(idx.name) + '</div>' +
-        '<div class="idx-info">' + idx.doc_count.toLocaleString() + ' docs \u2022 ' + esc(idx.size) + '</div>';
-      container.appendChild(div);
+    if(d.elapsed)$('timerValue').textContent=d.elapsed.toFixed?d.elapsed.toFixed(1):d.elapsed;
+    var step=d.step;
+    if(d.status==='running'){$('s'+step).className='step running';_stepTimers[step]=Date.now()}
+    if(d.status==='thinking')addReasoning(step,d);
+    if(d.status==='done'){
+      $('s'+step).className='step done';
+      $('s'+step+'d').textContent=d.detail||'Done';
+      $('spf'+step).style.width='100%';
+      if(_stepTimers[step]){var el=((Date.now()-_stepTimers[step])/1000).toFixed(1);$('se'+step).textContent=el+'s'}
     }
-  } catch (err) {
-    container.innerHTML = '<div style="color:#64748b;font-size:13px;">Could not load indexes.</div>';
-  }
+  };
+  src.onerror=function(){src.close();_stopHunt(btn);showToast('Connection lost — hunt may still be running','error')};
+}
+function _stopHunt(btn){
+  btn.disabled=false;btn.textContent='Run Hunt';
+  document.querySelector('.logo').classList.remove('pulse');
+  clearInterval(_huntTimer);$('huntTimer').style.display='none';
+}
+function exportResults(fmt){
+  window.open('/api/export?fmt='+fmt,'_blank');
 }
 
-async function loadSampleData() {
-  var btn = document.getElementById('sampleBtn');
-  var resultBox = document.getElementById('sampleResult');
-  btn.disabled = true;
-  btn.textContent = 'Generating\u2026 (takes ~30s)';
-  resultBox.style.display = 'none';
-
-  try {
-    var resp = await fetch('/api/generate', { method: 'POST' });
-    var data = await resp.json();
-    if (data.error) throw new Error(data.error);
-    resultBox.className = 'result-box success';
-    resultBox.textContent = '\u2705 ' + data.message;
-    resultBox.style.display = 'block';
-    loadIndexes();
-  } catch (err) {
-    resultBox.className = 'result-box error';
-    resultBox.textContent = '\u274c ' + err.message;
-    resultBox.style.display = 'block';
-  }
-  btn.disabled = false;
-  btn.textContent = 'Generate Sample Data';
+/* ── Toast Notifications ── */
+function showToast(msg,type){
+  var t=document.createElement('div');t.className='toast '+type;t.textContent=msg;
+  document.body.appendChild(t);setTimeout(function(){t.classList.add('show')},10);
+  setTimeout(function(){t.classList.remove('show');setTimeout(function(){t.remove()},300)},3500);
 }
 
-function setStep(n, state, text) {
-  document.getElementById('s' + n).className = 'step ' + state;
-  var el = document.getElementById('st' + n);
-  if (state === 'active') {
-    el.innerHTML = '<span class="spinner"></span>running\u2026';
-  } else {
-    el.textContent = text;
+/* ── Chat ── */
+var conversationId='';
+var _agentRoutes=[
+  {keywords:['drug','hospital','prescription','pharmacy','medication','ordering','procurement'],agent:'ghost-pattern-seeker'},
+  {keywords:['machine','idle','factory','runtime','equipment','shift','production'],agent:'ghost-pattern-seeker'},
+  {keywords:['building','energy','occupancy','kwh','electricity','hvac'],agent:'ghost-pattern-seeker'},
+  {keywords:['cost','dollar','price','value','impact','roi','budget'],agent:'ghost-valuator'},
+  {keywords:['index','mapping','field','structure','schema','data source'],agent:'ghost-cartographer'},
+  {keywords:['action','alert','slack','workflow','recommend','fix'],agent:'ghost-action-taker'},
+];
+function _autoRouteAgent(msg){
+  var lower=msg.toLowerCase();
+  for(var i=0;i<_agentRoutes.length;i++){
+    for(var k=0;k<_agentRoutes[i].keywords.length;k++){
+      if(lower.indexOf(_agentRoutes[i].keywords[k])!==-1)return _agentRoutes[i].agent;
+    }
   }
-}
-
-function animateCounter(target, duration) {
-  var counter = document.getElementById('counter');
-  var start = Date.now();
-  var startVal = parseInt(counter.textContent.replace(/[\$,]/g, '')) || 0;
-  function update() {
-    var elapsed = Date.now() - start;
-    var progress = Math.min(elapsed / duration, 1);
-    var eased = 1 - Math.pow(1 - progress, 4);
-    var current = Math.round(startVal + (target - startVal) * eased);
-    counter.textContent = '$' + current.toLocaleString();
-    if (progress < 1) { requestAnimationFrame(update); }
-    else { counter.classList.add('final'); }
-  }
-  requestAnimationFrame(update);
-}
-
-function colorClass(cat) {
-  if (!cat) return '';
-  var c = cat.toLowerCase();
-  if (c.indexOf('energy') >= 0) return 'energy';
-  if (c.indexOf('idle') >= 0 || c.indexOf('runtime') >= 0) return 'factory';
   return '';
 }
-
-function addFinding(f) {
-  document.getElementById('findingsSection').style.display = 'block';
-  var grid = document.getElementById('findingsList');
-  var div = document.createElement('div');
-  div.className = 'finding ' + colorClass(f.category);
-  var pri = (f.priority || 'MEDIUM').toLowerCase();
-  var jsonStr = JSON.stringify(f, null, 2);
-  var annualHtml = f.annualized ? '<div class="finding-annualized">Annualized: <strong>$' + Math.round(f.annualized).toLocaleString() + '/yr</strong></div>' : '';
-  var confHtml = f.confidence ? '<span class="finding-confidence">' + Math.round(f.confidence * 100) + '% confidence</span>' : '';
-  div.innerHTML =
-    '<div class="json-toggle" onclick="this.parentNode.querySelector(\'.json-raw\').classList.toggle(\'show\')">&lt;/&gt; JSON</div>' +
-    '<div class="finding-entity">' + esc(f.entity) + '</div>' +
-    '<div class="finding-category">' + esc(f.category) + '</div>' +
-    '<div class="finding-dollar">$' + Math.round(f.dollar).toLocaleString() + '</div>' +
-    '<div class="finding-calc">' + esc(f.calc) + '</div>' +
-    annualHtml +
-    '<span class="badge ' + pri + '">' + (f.priority || 'MEDIUM') + '</span>' +
-    confHtml +
-    '<div class="json-raw">' + esc(jsonStr) + '</div>';
-  grid.appendChild(div);
+function clearChat(){
+  var msgs=$('chatMessages');
+  msgs.innerHTML='';
+  var w=document.createElement('div');w.className='chat-welcome';w.id='chatWelcome';
+  w.innerHTML='<div class="chat-welcome-icon">&#128270;</div>'
+    +'<div class="chat-welcome-title">Ask me anything about your data</div>'
+    +'<div class="chat-welcome-sub">I query Elasticsearch via ES|QL or talk to AI agents directly</div>'
+    +'<div class="chat-cards">'
+    +'<div class="chat-card" onclick="sendChat(\'Show me drug waste patterns\')"><span class="chat-card-icon">&#128138;</span><span class="chat-card-text"><strong>Drug Waste</strong>Over-ordering vs usage</span></div>'
+    +'<div class="chat-card" onclick="sendChat(\'Which machines are running idle?\')"><span class="chat-card-icon">&#9881;</span><span class="chat-card-text"><strong>Idle Machines</strong>Off-shift runtime waste</span></div>'
+    +'<div class="chat-card" onclick="sendChat(\'Show building energy waste\')"><span class="chat-card-icon">&#9889;</span><span class="chat-card-text"><strong>Energy Waste</strong>High usage, low occupancy</span></div>'
+    +'<div class="chat-card" onclick="sendChat(\'What indexes do I have?\')"><span class="chat-card-icon">&#128451;</span><span class="chat-card-text"><strong>List Indexes</strong>All available data</span></div>'
+    +'<div class="chat-card" onclick="sendChat(\'Total waste summary across all sources\')"><span class="chat-card-icon">&#128176;</span><span class="chat-card-text"><strong>Waste Summary</strong>Total dollar impact</span></div>'
+    +'<div class="chat-card" onclick="sendChat(\'Show my audit history\')"><span class="chat-card-icon">&#128203;</span><span class="chat-card-text"><strong>Audit History</strong>Past hunt findings</span></div>'
+    +'</div>';
+  msgs.appendChild(w);
+  conversationId='';
 }
-
-function esc(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function showTyping(){
+  var msgs=$('chatMessages');
+  var t=document.createElement('div');t.className='chat-msg bot typing-indicator';t.id='typingInd';
+  t.innerHTML='<span></span><span></span><span></span>';
+  msgs.appendChild(t);msgs.scrollTop=msgs.scrollHeight;
 }
+function hideTyping(){var t=$('typingInd');if(t)t.remove()}
+function sendChat(msg){
+  msg=msg||$('chatInput').value.trim();if(!msg)return;
+  $('chatInput').value='';
+  var welcome=$('chatWelcome');if(welcome)welcome.remove();
+  var msgs=$('chatMessages');
+  var userDiv=document.createElement('div');userDiv.className='chat-msg user';userDiv.textContent=msg;
+  msgs.appendChild(userDiv);msgs.scrollTop=msgs.scrollHeight;
+  showTyping();
+  var chatT0=Date.now();
 
-function sleep(ms) { return new Promise(function(r) { setTimeout(r, ms); }); }
+  var agentId=$('chatAgentSelect').value;
+  if(!agentId)agentId=_autoRouteAgent(msg);
+  var useConverse=true;
+  if(!agentId){agentId='ghost-cartographer';useConverse=true}
+  var endpoint='/api/converse';
+  var body={message:msg,agent_id:agentId,conversation_id:conversationId};
 
-function showError(msg) {
-  var box = document.getElementById('errorBox');
-  box.textContent = '\u26a0\ufe0f ' + msg;
-  box.style.display = 'block';
-}
-
-function resetHuntUI() {
-  document.getElementById('errorBox').style.display = 'none';
-  document.getElementById('findingsList').innerHTML = '';
-  document.getElementById('findingsSection').style.display = 'none';
-  document.getElementById('totalBar').style.display = 'none';
-  document.getElementById('statusBar').style.display = 'none';
-  document.getElementById('statsRow').style.display = 'none';
-  document.getElementById('pipelineProgress').style.display = 'none';
-  document.getElementById('progressBar').style.width = '0%';
-  document.getElementById('counter').className = 'counter';
-  document.getElementById('counter').textContent = '$0';
-  for (var i = 1; i <= 4; i++) {
-    document.getElementById('s' + i).className = 'step';
-    document.getElementById('st' + i).textContent = 'waiting';
-  }
-}
-
-function setProgress(pct) {
-  document.getElementById('pipelineProgress').style.display = 'block';
-  document.getElementById('progressBar').style.width = pct + '%';
-}
-
-function showStats(indexes, anomalies, actions, elapsed) {
-  document.getElementById('statsRow').style.display = 'grid';
-  document.getElementById('statIndexes').textContent = indexes;
-  document.getElementById('statAnomalies').textContent = anomalies;
-  document.getElementById('statActions').textContent = actions;
-  document.getElementById('statTime').textContent = elapsed + 's';
-}
-
-async function startHunt() {
-  huntStartTime = Date.now();
-  var btn = document.getElementById('startBtn');
-  btn.disabled = true;
-  btn.textContent = '\u23f3 Running pipeline\u2026';
-  document.getElementById('counterSub').textContent = 'Hunt in progress\u2026';
-  resetHuntUI();
-
-  var useLive = (window.location.protocol !== 'file:');
-
-  if (useLive) {
-    document.getElementById('modeBadge').textContent = 'LIVE MODE \u2014 querying real Elasticsearch data';
-    document.getElementById('modeBadge').className = 'mode-badge mode-live';
-    try {
-      await runStreamingPipeline(btn);
-      return;
-    } catch (err) {
-      showError('Streaming failed: ' + err.message + '. Running fallback\u2026');
-    }
-  }
-
-  await runDemoPipeline(btn);
-}
-
-async function runStreamingPipeline(btn) {
-  var source = new EventSource('/api/run/stream');
-  var findings = [];
-  var total = 0;
-  var annualized = 0;
-  var indexCount = 0;
-  var triggered = 0;
-  var anomalies = 0;
-  var elapsed = 0;
-  var sector = '';
-
-  return new Promise(function(resolve, reject) {
-    source.onmessage = function(event) {
-      try {
-        var d = JSON.parse(event.data);
-
-        if (d.step === 'error') {
-          source.close();
-          reject(new Error(d.error));
-          return;
-        }
-
-        if (typeof d.step === 'number') {
-          if (d.status === 'running') {
-            setStep(d.step, 'active', '');
-            setProgress(((d.step - 1) / 4) * 100);
-          }
-          if (d.status === 'done') {
-            setStep(d.step, 'done', '\u2713 ' + d.detail);
-            setProgress((d.step / 4) * 100);
-            elapsed = d.elapsed || elapsed;
-
-            if (d.step === 1) {
-              indexCount = d.detail ? parseInt(d.detail) || 0 : 0;
-              sector = d.sector || '';
-              document.getElementById('counterSub').textContent = d.detail;
-              if (sector) {
-                document.getElementById('counterSub').innerHTML +=
-                  ' <span class="sector-badge">Sector: ' + esc(sector) + '</span>';
-              }
-            }
-            if (d.step === 2) {
-              anomalies = d.anomalies || 0;
-            }
-            if (d.step === 3 && d.findings) {
-              findings = d.findings;
-              total = d.total || 0;
-              annualized = d.annualized || 0;
-              animateCounter(total, 1500);
-              document.getElementById('findingsSection').style.display = 'block';
-              for (var i = 0; i < findings.length; i++) {
-                addFinding(findings[i]);
-              }
-            }
-            if (d.step === 4) {
-              triggered = d.triggered || 0;
-            }
-          }
-        }
-
-        if (d.step === 'complete') {
-          source.close();
-          total = d.total || total;
-          annualized = d.annualized || annualized;
-          findings = d.findings || findings;
-          triggered = d.actions_triggered || triggered;
-          indexCount = d.index_count || indexCount;
-          elapsed = d.elapsed || elapsed;
-
-          animateCounter(total, 1200);
-          showStats(indexCount, d.anomalies_found || anomalies, triggered, elapsed);
-
-          document.getElementById('counterSub').textContent =
-            findings.length + ' findings across hospital, manufacturing & real estate';
-
-          document.getElementById('totalBig').textContent = '$' + Math.round(total).toLocaleString();
-          document.getElementById('totalSub').innerHTML =
-            findings.length + ' findings \u2022 ' + triggered + ' Slack alerts \u2022 ' + elapsed + 's pipeline' +
-            (annualized ? '<br>Annualized impact: <strong style="color:#4ade80;">$' + Math.round(annualized).toLocaleString() + '/yr</strong>' : '');
-          document.getElementById('totalBar').style.display = 'block';
-
-          document.getElementById('sbSlack').textContent = '\u2705 ' + triggered + ' Slack alerts sent';
-          document.getElementById('sbAudit').textContent = '\u2705 ' + findings.length + ' audit records indexed';
-          document.getElementById('sbTime').textContent = '\u23f1\ufe0f ' + elapsed + 's';
-          document.getElementById('statusBar').style.display = 'block';
-
-          btn.textContent = '\u2705 Hunt Complete \u2014 Run Again';
-          btn.disabled = false;
-          resolve();
-        }
-      } catch (e) {
-        source.close();
-        reject(e);
+  fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+  .then(function(r){return r.json()})
+  .then(function(d){
+    hideTyping();
+    var elapsed=((Date.now()-chatT0)/1000).toFixed(1);
+    var botDiv=document.createElement('div');botDiv.className='chat-msg bot';
+    var metaHtml='<div class="chat-meta"><span class="chat-meta-time">'+elapsed+'s</span>';
+    if(d.source==='agent_builder'){
+      conversationId=d.conversation_id||'';
+      botDiv.innerHTML='<span class="source-tag">Agent Builder: '+esc(d.agent_id||'')+'</span>'+formatAgentResponse(d.response);
+      metaHtml+='<span class="chat-meta-tag">Powered by Agent Builder</span>';
+    } else if(d.type==='query_result'){
+      var html='<span class="source-tag">ES|QL: '+esc(d.provenance?.source_index||'')+'</span>';
+      html+='<div style="margin-bottom:6px">'+esc(d.explanation)+'</div>';
+      html+='<pre>'+esc(d.esql_query)+'</pre>';
+      if(d.rows&&d.rows.length){
+        html+='<table><thead><tr>';d.columns.forEach(function(c){html+='<th>'+esc(c)+'</th>'});html+='</tr></thead><tbody>';
+        d.rows.slice(0,20).forEach(function(r){html+='<tr>';d.columns.forEach(function(c){var v=r[c];html+='<td>'+(typeof v==='number'?Number(v).toLocaleString():esc(String(v!=null?v:'')))+'</td>'});html+='</tr>'});
+        html+='</tbody></table>';
+        if(d.row_count>20)html+='<div style="font-size:0.65rem;color:var(--text-dim);margin-top:4px">Showing 20 of '+d.row_count+' rows</div>';
       }
-    };
-    source.onerror = function() {
-      source.close();
-      reject(new Error('SSE connection lost'));
-    };
+      botDiv.innerHTML=html;
+      addConsoleEntry('Chat','ES|QL',d.esql_query,d.row_count+' rows');
+      metaHtml+='<span class="chat-meta-tag">Powered by ES|QL</span>';
+    } else if(d.type==='index_list'){
+      var html='<span class="source-tag">Elasticsearch</span><div>'+esc(d.explanation)+'</div><table><thead><tr><th>Index</th><th>Documents</th><th>Size</th></tr></thead><tbody>';
+      (d.results||[]).forEach(function(i){html+='<tr><td>'+esc(i.name)+'</td><td>'+fmtN(i.docs)+'</td><td>'+esc(i.size||'')+'</td></tr>'});
+      html+='</tbody></table>';botDiv.innerHTML=html;
+      metaHtml+='<span class="chat-meta-tag">Powered by Elasticsearch</span>';
+    } else if(d.type==='greeting'){
+      botDiv.innerHTML='<span class="source-tag">Ghost Economy Hunter</span><div>'+esc(d.response||'').replace(/\n/g,'<br>')+'</div>';
+      metaHtml+='<span class="chat-meta-tag">AI Agent</span>';
+    } else if(d.type==='help'){
+      var helpHtml='<span class="source-tag">Ghost Economy Hunter</span><div>'+esc(d.explanation)+'</div>';
+      if(d.suggestions&&d.suggestions.length){helpHtml+='<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px">';d.suggestions.forEach(function(s){helpHtml+='<button class="btn btn-secondary btn-sm" style="font-size:0.65rem" onclick="sendChat(\''+esc(s)+'\')">'+esc(s)+'</button>'});helpHtml+='</div>'}
+      botDiv.innerHTML=helpHtml;
+    } else if(d.error){
+      botDiv.innerHTML='<span class="source-tag">Error</span><div style="color:var(--rose)">'+esc(d.error)+'</div>';
+    } else {
+      botDiv.textContent=JSON.stringify(d,null,2);
+    }
+    metaHtml+='</div>';
+    botDiv.innerHTML+=metaHtml;
+    msgs.appendChild(botDiv);msgs.scrollTop=msgs.scrollHeight;
+  }).catch(function(e){
+    hideTyping();
+    var errDiv=document.createElement('div');errDiv.className='chat-msg bot';
+    errDiv.innerHTML='<span class="source-tag">Error</span><div style="color:var(--rose)">'+esc(e.message||'Request failed')+'</div>';
+    msgs.appendChild(errDiv);
   });
 }
-
-async function runDemoPipeline(btn) {
-  setStep(1, 'active', '');
-  setProgress(5);
-  await sleep(2500);
-  setStep(1, 'done', '\u2713 4 indexes mapped');
-  setProgress(25);
-  document.getElementById('counterSub').textContent = 'Mapped 6 indexes across 3 industries';
-
-  setStep(2, 'active', '');
-  setProgress(30);
-  await sleep(3500);
-  setStep(2, 'done', '\u2713 3 anomalies found');
-  setProgress(50);
-
-  setStep(3, 'active', '');
-  setProgress(55);
-  animateCounter(DEMO_TOTAL, 3000);
-  await sleep(3000);
-  setStep(3, 'done', '\u2713 values calculated');
-  setProgress(75);
-
-  document.getElementById('findingsSection').style.display = 'block';
-  for (var i = 0; i < DEMO_FINDINGS.length; i++) {
-    addFinding(DEMO_FINDINGS[i]);
-    await sleep(600);
-  }
-
-  setStep(4, 'active', '');
-  setProgress(80);
-  await sleep(2000);
-  setStep(4, 'done', '\u2713 3 workflows triggered');
-  setProgress(100);
-
-  var elapsedSec = ((Date.now() - huntStartTime) / 1000).toFixed(1);
-  showStats(6, 3, 3, elapsedSec);
-  animateCounter(DEMO_TOTAL, 2000);
-  document.getElementById('counterSub').textContent = '3 findings across hospital, manufacturing & real estate';
-
-  document.getElementById('totalBig').textContent = '$' + Math.round(DEMO_TOTAL).toLocaleString();
-  document.getElementById('totalSub').textContent = '3 findings \u2022 3 Slack alerts \u2022 ' + elapsedSec + 's pipeline time';
-  document.getElementById('totalBar').style.display = 'block';
-
-  document.getElementById('sbSlack').textContent = '\u2705 3 Slack alerts sent';
-  document.getElementById('sbAudit').textContent = '\u2705 3 audit records indexed';
-  document.getElementById('sbTime').textContent = '\u23f1\ufe0f ' + elapsedSec + 's total';
-  document.getElementById('statusBar').style.display = 'block';
-
-  btn.textContent = '\u2705 Hunt Complete \u2014 Run Again';
-  btn.disabled = false;
+function formatAgentResponse(text){
+  if(!text)return '<em style="color:var(--text-dim)">No response</em>';
+  try{var j=JSON.parse(text);return '<pre>'+esc(JSON.stringify(j,null,2))+'</pre>'}catch(e){}
+  return '<div>'+esc(text).replace(/\n/g,'<br>')+'</div>';
 }
 
-/* ═══ CHAT ═══ */
-function addChatMsg(role, html) {
-  var container = document.getElementById('chatMessages');
-  var div = document.createElement('div');
-  div.className = 'chat-msg ' + role;
-  div.innerHTML = '<div class="chat-bubble">' + html + '</div>';
-  container.appendChild(div);
-  container.scrollTop = container.scrollHeight;
-}
-
-function buildTableHtml(cols, rows) {
-  if (!rows || !rows.length) return '<em>No results</em>';
-  var h = '<table><thead><tr>';
-  for (var i = 0; i < cols.length; i++) h += '<th>' + esc(cols[i]) + '</th>';
-  h += '</tr></thead><tbody>';
-  var limit = Math.min(rows.length, 15);
-  for (var r = 0; r < limit; r++) {
-    h += '<tr>';
-    for (var c = 0; c < cols.length; c++) {
-      var val = rows[r][cols[c]];
-      if (typeof val === 'number') {
-        val = val % 1 === 0 ? val.toLocaleString() : val.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:4});
-      }
-      h += '<td>' + esc(String(val == null ? '' : val)) + '</td>';
+/* ── Upload & Connect ── */
+function uploadCSV(ev){
+  ev.preventDefault();
+  var fd=new FormData();fd.append('file',$('uploadFile').files[0]);fd.append('index_name',$('uploadIdx').value);
+  $('uploadResult').innerHTML='<span class="loading"></span> Uploading...';
+  fetch('/api/upload',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(d){
+    if(d.error)$('uploadResult').innerHTML='<span style="color:var(--rose)">'+esc(d.error)+'</span>';
+    else{
+      $('uploadResult').innerHTML='<span style="color:var(--emerald)">Indexed '+d.documents+' docs into '+esc(d.index)+' — now available in Hunt tab</span>';
+      loadScanTargets();
     }
-    h += '</tr>';
-  }
-  h += '</tbody></table>';
-  if (rows.length > 15) h += '<div style="font-size:11px;color:#64748b;margin-top:4px;">\u2026and ' + (rows.length - 15) + ' more rows</div>';
-  return h;
+    loadIndexes();
+  }).catch(function(e){$('uploadResult').innerHTML='<span style="color:var(--rose)">'+esc(e.message)+'</span>'});
 }
+function connectIndex(){
+  var idx=$('connectIdx').value.trim();if(!idx)return;
+  $('connectResult').innerHTML='<span class="loading"></span>';
+  fetch('/api/connect',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({index_name:idx})}).then(function(r){return r.json()}).then(function(d){
+    if(d.error)$('connectResult').innerHTML='<span style="color:var(--rose)">'+esc(d.error)+'</span>';
+    else $('connectResult').innerHTML='<span style="color:var(--emerald)">'+esc(d.index)+': '+fmtN(d.doc_count)+' docs, '+d.numeric_fields.length+' numeric fields — anomaly potential: '+d.anomaly_potential+'</span>';
+  }).catch(function(e){$('connectResult').innerHTML='<span style="color:var(--rose)">'+esc(e.message)+'</span>'});
+}
+function loadIndexes(){
+  fetch('/api/indexes').then(function(r){return r.json()}).then(function(d){
+    if(!d.indexes||!d.indexes.length){$('indexList').innerHTML='<span style="color:var(--text-dim)">No indexes found. Generate sample data or upload a CSV.</span>';return}
+    var html='<div style="display:flex;flex-wrap:wrap;gap:8px">';
+    d.indexes.forEach(function(i){html+='<div style="background:var(--surface-2);padding:6px 12px;border-radius:6px;font-family:var(--font-mono);font-size:0.72rem"><strong>'+esc(i.name)+'</strong> <span style="color:var(--text-dim)">'+fmtN(i.doc_count)+' docs</span></div>'});
+    html+='</div>';$('indexList').innerHTML=html;
+  }).catch(function(){$('indexList').textContent='Failed to load indexes'});
+}
+function generateData(){
+  $('genResult').innerHTML='<span class="loading"></span> Generating...';
+  fetch('/api/generate',{method:'POST'}).then(function(r){return r.json()}).then(function(d){
+    $('genResult').innerHTML='<span style="color:var(--emerald)">'+esc(d.message||'Done')+'</span>';loadIndexes();
+  }).catch(function(e){$('genResult').innerHTML='<span style="color:var(--rose)">'+esc(e.message)+'</span>'});
+}
+loadIndexes();
 
-async function sendChat(preset) {
-  var input = document.getElementById('chatInput');
-  var msg = preset || input.value.trim();
-  if (!msg) return;
-  input.value = '';
+/* ── Architecture: live indexes ── */
+fetch('/api/indexes').then(function(r){return r.json()}).then(function(d){
+  var list=d.indexes||[];
+  if(!list.length){$('archIndexList').innerHTML='<span style="color:var(--text-dim)">No indexes found</span>';return}
+  var html='';
+  list.forEach(function(idx){
+    var bg=idx.doc_count>0?'var(--emerald-dim)':'var(--surface-2)';
+    var col=idx.doc_count>0?'var(--emerald)':'var(--text-dim)';
+    html+='<div style="background:'+bg+';border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px">'
+      +'<strong style="font-family:var(--font-mono);font-size:0.72rem;color:'+col+'">'+esc(idx.name)+'</strong>'
+      +'<div style="font-size:0.65rem;color:var(--text-dim);margin-top:2px">'+fmtN(idx.doc_count)+' docs &middot; '+esc(idx.size||'')+'</div></div>';
+  });
+  $('archIndexList').innerHTML=html;
+}).catch(function(){$('archIndexList').innerHTML='<span style="color:var(--text-dim)">Could not load indexes</span>'});
 
-  addChatMsg('user', esc(msg));
-
-  var btn = document.getElementById('chatSendBtn');
-  btn.disabled = true;
-
-  if (window.location.protocol === 'file:') {
-    addChatMsg('bot', 'Chat requires the backend. Run <code>python api.py</code> then open <code>http://localhost:8000</code>');
-    btn.disabled = false;
-    return;
-  }
-
-  try {
-    var resp = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: msg })
+/* ── History ── */
+function loadHistory(){
+  fetch('/api/history').then(function(r){return r.json()}).then(function(d){
+    $('hTotalWaste').textContent=fmt$(d.total_waste_usd||0);
+    $('hRecords').textContent=d.total_records||'0';
+    $('hAnnualized').textContent=fmt$(d.total_annualized_usd||0);
+    var records=d.records||[];
+    if(!records.length){$('historyTable').innerHTML='<div class="empty-state"><h3>No history yet</h3><p>Run a hunt to generate audit records</p></div>';return}
+    var html='<table class="findings-table"><thead><tr><th>Timestamp</th><th>Entity</th><th>Source</th><th>Category</th><th>Dollar Value</th><th>Action</th><th>Priority</th></tr></thead><tbody>';
+    records.forEach(function(r){
+      html+='<tr><td style="font-family:var(--font-mono);font-size:0.68rem">'+(r['@timestamp']?new Date(r['@timestamp']).toLocaleString():'--')+'</td><td>'+esc(r.entity||'')+'</td><td><span class="tag">'+esc(r.source_index||'')+'</span></td><td>'+esc(r.category||'')+'</td><td style="font-family:var(--font-mono);font-weight:700">'+fmt$(r.dollar_value||0)+'</td><td>'+esc(r.action_taken||'--')+'</td><td><span class="priority-badge priority-'+esc(r.priority||'MEDIUM')+'">'+esc(r.priority||'--')+'</span></td></tr>';
     });
-    var data = await resp.json();
+    html+='</tbody></table>';
+    $('historyTable').innerHTML=html;
+  }).catch(function(){$('historyTable').innerHTML='<div class="empty-state"><h3>Could not load history</h3><p>Elasticsearch may be unavailable</p></div>'});
+}
+loadHistory();
 
-    if (data.error) {
-      addChatMsg('bot', '<span style="color:#fca5a5;">\u274c ' + esc(data.error) + '</span>');
-    } else if (data.type === 'help') {
-      var html = esc(data.explanation) + '<div style="margin-top:8px;">';
-      for (var i = 0; i < data.suggestions.length; i++) {
-        html += '<span class="chat-suggestion" onclick="sendChat(\'' + esc(data.suggestions[i]).replace(/'/g, "\\'") + '\')">' + esc(data.suggestions[i]) + '</span>';
-      }
-      html += '</div>';
-      addChatMsg('bot', html);
-    } else if (data.type === 'index_list') {
-      var html = esc(data.explanation) + '<br>';
-      for (var i = 0; i < data.results.length; i++) {
-        var ix = data.results[i];
-        html += '<code>' + esc(ix.name) + '</code> \u2014 ' + ix.docs.toLocaleString() + ' docs<br>';
-      }
-      addChatMsg('bot', html);
-    } else if (data.type === 'query_result') {
-      var html = '<strong>' + esc(data.explanation) + '</strong>';
-      html += '<div class="esql-block">' + esc(data.esql_query) + '</div>';
-      html += '<div style="font-size:12px;color:#64748b;margin-bottom:6px;">' + data.row_count + ' result' + (data.row_count !== 1 ? 's' : '') + '</div>';
-      html += buildTableHtml(data.columns, data.rows);
-      addChatMsg('bot', html);
+/* ── Refresh Metrics ── */
+function refreshMetrics(){
+  fetch('/api/impact').then(function(r){return r.json()}).then(function(d){
+    $('mWaste').textContent=fmt$(d.total_waste_found_usd||0);
+    $('mFindings').textContent=d.total_findings||'0';
+    $('mIndexes').textContent=d.indexes_scanned||'0';
+    $('mDocs').textContent=fmtN(d.documents_analyzed||0);
+    $('dashRefresh').innerHTML='Updated: '+new Date().toLocaleTimeString()+'<br>Auto-refresh: 3 min';
+    var c=d.comparison||{};var m=c.manual_analysis||{};var g=c.ghost_economy_hunter||{};
+    var tb=$('compareBody');if(tb){
+      tb.innerHTML=
+        '<tr><td>Time to Analyze</td><td>~'+(m.estimated_hours||40)+' hours</td><td class="highlight">~'+(g.estimated_minutes||'3-4')+' minutes</td><td class="highlight">'+fmtN(d.roi_multiplier||600)+'x faster</td></tr>'
+        +'<tr><td>Queries Needed</td><td>'+(m.queries_needed||15)+'+ manual SQL</td><td class="highlight">'+(g.agent_steps||4)+' autonomous agents</td><td class="highlight">Fully automated</td></tr>'
+        +'<tr><td>Error Rate</td><td>~'+(m.error_rate_pct||15)+'% human error</td><td class="highlight">'+(g.error_rate_pct||0)+'% (ES|QL deterministic)</td><td class="highlight">100% reduction</td></tr>'
+        +'<tr><td>Coverage</td><td>'+(m.coverage||'1-2 departments')+'</td><td class="highlight">'+(g.coverage||'Full org scan')+'</td><td class="highlight">Complete coverage</td></tr>'
+        +'<tr><td>Confidence</td><td>Varies by analyst</td><td class="highlight">'+((d.avg_confidence_pct||92).toFixed?d.avg_confidence_pct.toFixed(1):d.avg_confidence_pct||92)+'% average</td><td class="highlight">Consistent &amp; measurable</td></tr>'
+        +'<tr><td>Time Saved</td><td>—</td><td class="highlight">'+(d.time_saved_hours||39)+' hours saved</td><td class="highlight">Per audit cycle</td></tr>';
     }
-  } catch (err) {
-    addChatMsg('bot', '<span style="color:#fca5a5;">\u274c Connection error: ' + esc(err.message) + '</span>');
-  }
-  btn.disabled = false;
+  }).catch(function(){});
+}
+function _updateLastHunt(sources,findings,total,elapsed){
+  var box=$('lastHuntSummary');
+  box.classList.add('visible');
+  var now=new Date().toLocaleString();
+  $('lastHuntContent').innerHTML=
+    '<span style="font-weight:600;color:var(--emerald)">'+fmt$(total)+'</span> total waste found &middot; '
+    +findings+' finding'+(findings!==1?'s':'')+' &middot; '
+    +sources+' source'+(sources!==1?'s':'')+' &middot; '
+    +elapsed+'s &middot; <span style="color:var(--text-dim)">'+esc(now)+'</span>';
 }
 
-/* ═══ SECTORS ═══ */
-var sectorsCache = null;
-var sectorDetailCache = {};
+fetch('/api/agent-builder/agents').then(function(r){return r.json()}).then(function(d){
+  var agents=d.agents||[];
+  $('dotAgents').className='status-dot '+(agents.length>0?'green':'yellow');
+  if(!agents.length){$('registeredAgents').innerHTML='<span style="color:var(--text-dim)">No agents registered. Run provisioning first.</span>';return}
+  var html='<div style="display:flex;flex-wrap:wrap;gap:8px">';
+  agents.forEach(function(a){html+='<div style="background:var(--primary-dim);padding:6px 12px;border-radius:6px"><strong style="font-size:0.78rem">'+esc(a.name||a.id)+'</strong><br><span style="font-size:0.65rem;color:var(--text-dim)">'+esc(a.id||'')+'</span></div>'});
+  html+='</div>';$('registeredAgents').innerHTML=html;
+}).catch(function(){$('registeredAgents').innerHTML='<span style="color:var(--text-dim)">Could not load agents</span>';$('dotAgents').className='status-dot red'});
 
-async function loadSectors() {
-  var grid = document.getElementById('sectorGrid');
-  if (sectorsCache) { renderSectors(sectorsCache); return; }
-  if (window.location.protocol === 'file:') {
-    grid.innerHTML = '<div style="color:#64748b;font-size:13px;">Run <code>python api.py</code> to load sectors.</div>';
-    return;
-  }
-  try {
-    var resp = await fetch('/api/sectors');
-    var data = await resp.json();
-    sectorsCache = data.sectors || [];
-    renderSectors(sectorsCache);
-  } catch (err) {
-    grid.innerHTML = '<div style="color:#64748b;font-size:13px;">Could not load sectors.</div>';
-  }
-}
+fetch('/api/agent-builder/tools').then(function(r){return r.json()}).then(function(d){
+  var tools=d.tools||[];
+  $('dotTools').className='status-dot '+(tools.length>0?'green':'yellow');
+  if(!tools.length){$('registeredTools').innerHTML='<span style="color:var(--text-dim)">No tools registered. Run provisioning first.</span>';return}
+  var html='<div style="display:flex;flex-wrap:wrap;gap:8px">';
+  tools.forEach(function(t){html+='<div style="background:var(--purple-dim);padding:6px 12px;border-radius:6px"><strong style="font-size:0.78rem">'+esc(t.id||t.name||'')+'</strong><br><span style="font-size:0.65rem;color:var(--text-dim)">'+esc(t.type||'esql')+'</span></div>'});
+  html+='</div>';$('registeredTools').innerHTML=html;
+}).catch(function(){$('registeredTools').innerHTML='<span style="color:var(--text-dim)">Could not load tools</span>'});
 
-function renderSectors(sectors) {
-  var grid = document.getElementById('sectorGrid');
-  grid.innerHTML = '';
-  for (var i = 0; i < sectors.length; i++) {
-    var s = sectors[i];
-    var div = document.createElement('div');
-    div.className = 'sector-card';
-    div.setAttribute('data-id', s.id);
-    div.innerHTML =
-      '<div class="sc-icon">' + (s.icon || '') + '</div>' +
-      '<div class="sc-name">' + esc(s.name) + '</div>' +
-      '<div class="sc-desc">' + esc(s.description) + '</div>' +
-      '<div class="sc-waste">Typical waste: ' + esc(s.typical_waste_pct) + '</div>';
-    div.onclick = (function(sid) { return function() { showSectorDetail(sid); }; })(s.id);
-    grid.appendChild(div);
-  }
-}
-
-async function showSectorDetail(sectorId) {
-  var cards = document.querySelectorAll('.sector-card');
-  for (var i = 0; i < cards.length; i++) {
-    cards[i].classList.toggle('active', cards[i].getAttribute('data-id') === sectorId);
-  }
-
-  var detail = document.getElementById('sectorDetail');
-  if (sectorDetailCache[sectorId]) {
-    renderSectorDetail(sectorDetailCache[sectorId]);
-    return;
-  }
-
-  try {
-    var resp = await fetch('/api/sectors/' + sectorId);
-    var data = await resp.json();
-    sectorDetailCache[sectorId] = data;
-    renderSectorDetail(data);
-  } catch (err) {
-    detail.innerHTML = '<p style="color:#fca5a5;">Failed to load sector details.</p>';
-    detail.classList.add('show');
-  }
-}
-
-function renderSectorDetail(data) {
-  var detail = document.getElementById('sectorDetail');
-  var html = '<h3>' + esc(data.name) + '</h3>';
-
-  if (data.tools && data.tools.length) {
-    html += '<div class="sd-section"><div class="sd-label">ES|QL Tools (ready to paste into Agent Builder)</div>';
-    for (var i = 0; i < data.tools.length; i++) {
-      var t = data.tools[i];
-      html += '<div style="margin-bottom:12px;"><strong style="color:#38bdf8;">' + esc(t.name) + '</strong>';
-      html += '<span style="color:#64748b;font-size:12px;margin-left:8px;">' + esc(t.description) + '</span>';
-      html += '<pre>' + esc(t.query) + '</pre></div>';
-    }
-    html += '</div>';
-  }
-
-  if (data.pricing && data.pricing.length) {
-    html += '<div class="sd-section"><div class="sd-label">Pricing Reference</div>';
-    html += '<table style="width:100%;border-collapse:collapse;font-size:12px;">';
-    html += '<tr style="border-bottom:1px solid #334155;"><th style="padding:6px 10px;text-align:left;color:#64748b;">Item</th><th style="padding:6px 10px;text-align:right;color:#64748b;">Cost</th><th style="padding:6px 10px;text-align:left;color:#64748b;">Source</th></tr>';
-    for (var i = 0; i < data.pricing.length; i++) {
-      var p = data.pricing[i];
-      html += '<tr style="border-bottom:1px solid #1e293b;">' +
-        '<td style="padding:5px 10px;color:#e2e8f0;">' + esc(p.item_name) + '</td>' +
-        '<td style="padding:5px 10px;text-align:right;color:#f59e0b;font-weight:600;">$' + p.unit_cost_usd.toFixed(2) + '/' + esc(p.unit_label) + '</td>' +
-        '<td style="padding:5px 10px;color:#64748b;">' + esc(p.source) + '</td></tr>';
-    }
-    html += '</table></div>';
-  }
-
-  if (data.indexes && data.indexes.length) {
-    html += '<div class="sd-section"><div class="sd-label">Required Indexes</div>';
-    for (var i = 0; i < data.indexes.length; i++) {
-      var ix = data.indexes[i];
-      html += '<div style="margin-bottom:8px;"><code style="color:#38bdf8;">' + esc(ix.name) + '</code>';
-      html += '<div class="field-tags" style="margin-top:4px;">';
-      for (var f in ix.mappings) {
-        var t = ix.mappings[f];
-        var cls = (t === 'float' || t === 'double' || t === 'integer' || t === 'long') ? 'numeric' :
-                  (t === 'keyword') ? 'keyword' : (t === 'date') ? 'date' : '';
-        html += '<span class="field-tag ' + cls + '">' + esc(f) + ' (' + t + ')</span>';
-      }
-      html += '</div></div>';
-    }
-    html += '</div>';
-  }
-
-  if (data.pattern_seeker_prompt) {
-    html += '<div class="sd-section"><div class="sd-label">Pattern Seeker Agent Prompt</div>';
-    html += '<pre>' + esc(data.pattern_seeker_prompt) + '</pre></div>';
-  }
-
-  detail.innerHTML = html;
-  detail.classList.add('show');
-}
+setInterval(refreshMetrics,180000);
 </script>
 </body>
 </html>

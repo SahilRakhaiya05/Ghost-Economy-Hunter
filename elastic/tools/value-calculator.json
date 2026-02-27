@@ -1,6 +1,14 @@
 {
+  "id": "ghost-value-calculator",
   "name": "value_calculator",
   "type": "esql",
-  "description": "Looks up the unit cost for an item from the pricing-reference index to calculate dollar impact of anomalies.",
-  "query": "FROM pricing-reference\n| WHERE item_key == ?item_key\n| KEEP item_key, item_name, unit_cost_usd, unit_label\n| LIMIT 1"
+  "description": "Looks up the unit cost for an item from the pricing-reference index to calculate the dollar impact of anomalies. Provide the item_key to find its price.",
+  "tags": ["analytics", "pricing", "valuation"],
+  "query": "FROM pricing-reference | WHERE item_key == ?item_key | KEEP item_key, item_name, unit_cost_usd, unit_label | LIMIT 1",
+  "params": {
+    "item_key": {
+      "type": "string",
+      "description": "The item identifier to look up in the pricing reference index (e.g., 'insulin_vial', 'electricity_kwh', 'machine_hour')."
+    }
+  }
 }

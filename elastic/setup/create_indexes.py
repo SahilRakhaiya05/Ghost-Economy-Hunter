@@ -90,9 +90,16 @@ INDEXES: Dict[str, Dict[str, Any]] = {
             "properties": {
                 "@timestamp": {"type": "date"},
                 "finding_id": {"type": "keyword"},
-                "entity": {"type": "text"},
+                "entity": {"type": "text", "fields": {"raw": {"type": "keyword"}}},
+                "category": {"type": "keyword"},
+                "source_index": {"type": "keyword"},
+                "tool_used": {"type": "keyword"},
                 "dollar_value": {"type": "double"},
+                "calculation": {"type": "text"},
+                "confidence": {"type": "float"},
                 "action_taken": {"type": "keyword"},
+                "priority": {"type": "keyword"},
+                "annualized_value": {"type": "double"},
                 "full_json": {"type": "object", "enabled": False},
             }
         }

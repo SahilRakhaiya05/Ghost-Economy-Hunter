@@ -1,6 +1,8 @@
 {
+  "id": "ghost-runtime-anomaly",
   "name": "runtime_anomaly",
   "type": "esql",
-  "description": "Finds machines running during off-shift hours with no production output, indicating idle equipment waste.",
-  "query": "FROM factory-iot-data\n| WHERE shift_active == false\n| STATS\n    total_idle_minutes = SUM(runtime_minutes),\n    avg_daily_idle     = AVG(runtime_minutes)\n  BY machine_id\n| EVAL\n    idle_hours     = total_idle_minutes / 60,\n    estimated_cost = idle_hours * 112.50\n| WHERE avg_daily_idle > 200\n| SORT estimated_cost DESC\n| LIMIT 10"
+  "description": "Finds machines running during off-shift hours with no production output, indicating idle equipment waste. Flags machines averaging over 200 minutes of daily idle time.",
+  "tags": ["analytics", "manufacturing", "waste-detection"],
+  "query": "FROM factory-iot-data | WHERE shift_active == false | STATS total_idle_minutes = SUM(runtime_minutes), avg_daily_idle = AVG(runtime_minutes) BY machine_id | EVAL idle_hours = total_idle_minutes / 60, estimated_cost = idle_hours * 112.50 | WHERE avg_daily_idle > 200 | SORT estimated_cost DESC | LIMIT 10"
 }

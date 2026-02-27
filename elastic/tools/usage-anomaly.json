@@ -1,6 +1,8 @@
 {
+  "id": "ghost-usage-anomaly",
   "name": "usage_anomaly",
   "type": "esql",
-  "description": "Finds drugs or items ordered significantly more than consumed, detecting procurement waste patterns.",
-  "query": "FROM hospital-drugs\n| STATS\n    total_ordered = SUM(qty_ordered),\n    total_used    = SUM(qty_used)\n  BY drug_name, wing_id\n| EVAL\n    delta = total_ordered - total_used,\n    waste_ratio = TO_DOUBLE(total_ordered - total_used) / TO_DOUBLE(total_ordered)\n| WHERE waste_ratio > 0.25\n| SORT waste_ratio DESC\n| LIMIT 20"
+  "description": "Finds drugs or items ordered significantly more than consumed, detecting procurement waste patterns. Returns items with over 25% waste ratio, sorted by severity.",
+  "tags": ["analytics", "healthcare", "waste-detection"],
+  "query": "FROM hospital-drugs | STATS total_ordered = SUM(qty_ordered), total_used = SUM(qty_used) BY drug_name, wing_id | EVAL delta = total_ordered - total_used, waste_ratio = TO_DOUBLE(total_ordered - total_used) / TO_DOUBLE(total_ordered) | WHERE waste_ratio > 0.25 | SORT waste_ratio DESC | LIMIT 20"
 }
